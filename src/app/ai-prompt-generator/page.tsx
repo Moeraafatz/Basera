@@ -19,13 +19,6 @@ const CATEGORIES = [
   { name: "Research & Analysis", emoji: "🔬", gradient: "from-indigo-500 to-violet-500" },
 ];
 
-const MODELS = [
-  { value: "chatgpt", label: "ChatGPT", color: "text-emerald-600", bg: "bg-emerald-100" },
-  { value: "gpt-4o", label: "GPT-4o", color: "text-blue-600", bg: "bg-blue-100" },
-  { value: "claude", label: "Claude", color: "text-orange-600", bg: "bg-orange-100" },
-  { value: "gemini", label: "Gemini", color: "text-purple-600", bg: "bg-purple-100" },
-];
-
 const LEVELS: { value: Level; label: string; desc: string; gradient: string }[] = [
   { value: "simple", label: "Simple", desc: "Clear & concise", gradient: "from-emerald-400 to-teal-400" },
   { value: "advanced", label: "Advanced", desc: "Detailed & structured", gradient: "from-violet-400 to-purple-400" },
@@ -39,7 +32,7 @@ const TIPS = [
   { icon: Cpu, text: "Ask for step-by-step reasoning", color: "text-emerald-600", bg: "bg-emerald-100" },
 ];
 
-function generatePrompt(input: string, level: Level, category: string, model: string): string {
+function generatePrompt(input: string, level: Level, category: string): string {
   if (!input.trim()) return "";
 
   const prefixes: Record<Level, string> = {
@@ -57,21 +50,13 @@ function generatePrompt(input: string, level: Level, category: string, model: st
     "Research & Analysis": "Provide comprehensive analysis with data-driven insights and proper citations.",
   };
 
-  const modelInstructions: Record<string, string> = {
-    chatgpt: "Optimize for ChatGPT's conversational style and capabilities.",
-    "gpt-4": "Leverage GPT-4's advanced reasoning and broad knowledge.",
-    claude: "Format for Claude's thoughtful, detailed responses.",
-    gemini: "Structure for Gemini's multimodal and fast responses.",
-  };
-
-  return `${prefixes[level]}\n\n${modelInstructions[model] || modelInstructions.chatgpt}\n\nTask: ${input}\n\nContext: ${categoryContext[category] || categoryContext["Content Creation"]}`;
+  return `${prefixes[level]}\n\nTask: ${input}\n\nContext: ${categoryContext[category] || categoryContext["Content Creation"]}`;
 }
 
 export default function AIPromptGeneratorPage() {
   const [input, setInput] = useState("");
   const [level, setLevel] = useState<Level>("advanced");
   const [category, setCategory] = useState("Content Creation");
-  const [model, setModel] = useState("chatgpt");
   const [output, setOutput] = useState("");
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -86,11 +71,11 @@ export default function AIPromptGeneratorPage() {
       setPreviewOutput("");
     } else {
       const timer = setTimeout(() => {
-        setPreviewOutput(generatePrompt(input, level, category, model));
+        setPreviewOutput(generatePrompt(input, level, category));
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [input, level, category, model]);
+  }, [input, level, category]);
 
   const handleCopy = async () => {
     if (!output) return;
@@ -119,13 +104,13 @@ export default function AIPromptGeneratorPage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "ai-prompt", input, level, category, model }),
+        body: JSON.stringify({ type: "ai-prompt", input, level, category, model: "chatgpt" }),
       });
       const data = await res.json();
-      setOutput(data.result || generatePrompt(input, level, category, model));
+      setOutput(data.result || generatePrompt(input, level, category));
       toast.success("Prompt generated!");
     } catch {
-      setOutput(generatePrompt(input, level, category, model));
+      setOutput(generatePrompt(input, level, category));
       toast.error("API unavailable — using local generation");
     } finally {
       setIsGenerating(false);
@@ -219,7 +204,7 @@ export default function AIPromptGeneratorPage() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs font-medium text-gray-600 mb-2 block">Complexity</label>
                         <div className="grid grid-cols-3 gap-2">
@@ -251,25 +236,6 @@ export default function AIPromptGeneratorPage() {
                             {CATEGORIES.map((c) => (
                               <SelectItem key={c.name} value={c.name} className="text-sm">
                                 {c.emoji} {c.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-2 block">Target Model</label>
-                        <Select value={model} onValueChange={setModel}>
-                          <SelectTrigger className="h-11 bg-gray-100 border-0 text-gray-900">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {MODELS.map((m) => (
-                              <SelectItem key={m.value} value={m.value} className="text-sm">
-                                <span className="flex items-center gap-2">
-                                  <span className={`w-2 h-2 rounded-full ${m.bg.replace('100', '500')}`} />
-                                  {m.label}
-                                </span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -408,7 +374,6 @@ export default function AIPromptGeneratorPage() {
                   {[
                     { label: "Level", value: level.toUpperCase(), badge: "bg-gradient-to-r from-violet-500 to-purple-500 text-white" },
                     { label: "Category", value: category.split(" ")[0], badge: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white" },
-                    { label: "Model", value: model.toUpperCase(), badge: "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" },
                   ].map((item, i) => (
                     <motion.div
                       key={item.label}
