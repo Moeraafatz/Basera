@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Wand2, Sparkles, Image, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Brain, Layers, ChevronDown, Star, Users, Copy } from "lucide-react";
+import Image from "next/image";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import { Wand2, Sparkles, Image as ImageIcon, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Star, Users, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -11,164 +12,26 @@ import { toast } from "sonner";
 const HERO_IMAGE = "/hero-image.webp";
 
 const CATEGORIES = [
-  { id: "content", label: "📝 Content" },
-  { id: "business", label: "💼 Business" },
-  { id: "coding", label: "💻 Coding" },
-  { id: "creative", label: "✍️ Creative" },
+  { id: "content", label: "Content" },
+  { id: "business", label: "Business" },
+  { id: "coding", label: "Coding" },
+  { id: "creative", label: "Creative" },
 ] as const;
 
 const TOOLS = [
-  {
-    href: "/ai-prompt-generator",
-    icon: Sparkles,
-    name: "AI Prompt Generator",
-    desc: "Transform ideas into professional AI prompts for ChatGPT, Claude, and Gemini",
-    badge: "Most Popular",
-    gradient: "from-violet-500 to-purple-600",
-    hoverGradient: "hover:from-violet-600 hover:to-purple-700",
-  },
-  {
-    href: "/prompt-checker",
-    icon: CheckCircle,
-    name: "Prompt Checker",
-    desc: "Verify your prompt quality and get improvement suggestions",
-    badge: "Free",
-    gradient: "from-emerald-500 to-teal-600",
-    hoverGradient: "hover:from-emerald-600 hover:to-teal-700",
-  },
-  {
-    href: "/image-prompt",
-    icon: Image,
-    name: "Image Prompts",
-    desc: "Create stunning AI images with optimized prompts for DALL-E and Midjourney",
-    badge: "Popular",
-    gradient: "from-pink-500 to-rose-600",
-    hoverGradient: "hover:from-pink-600 hover:to-rose-700",
-  },
-  {
-    href: "/veo3-prompt",
-    icon: Video,
-    name: "VEO3 Video Prompts",
-    desc: "Create stunning AI videos with professional video generation prompts",
-    badge: "New",
-    gradient: "from-amber-500 to-orange-600",
-    hoverGradient: "hover:from-amber-600 hover:to-orange-700",
-  },
-  {
-    href: "/ai-humanizer",
-    icon: Shield,
-    name: "AI Humanizer",
-    desc: "Make AI-generated text sound natural and human-written",
-    badge: "Free",
-    gradient: "from-cyan-500 to-blue-600",
-    hoverGradient: "hover:from-cyan-600 hover:to-blue-700",
-  },
-  {
-    href: "/image-to-prompt",
-    icon: FileText,
-    name: "Image to Prompt",
-    desc: "Convert images to detailed AI image prompts",
-    badge: "Popular",
-    gradient: "from-indigo-500 to-violet-600",
-    hoverGradient: "hover:from-indigo-600 hover:to-violet-700",
-  },
-];
-
-const STEPS = [
-  {
-    number: "01",
-    title: "Enter Your Idea",
-    desc: "Simply input your task, goal, or a simple prompt. Our tool works with any type of input.",
-    color: "bg-violet-500",
-  },
-  {
-    number: "02",
-    title: "AI-Powered Enhancement",
-    desc: "Our AI analyzes your input and generates a comprehensive, optimized prompt tailored for various AI models.",
-    color: "bg-purple-500",
-  },
-  {
-    number: "03",
-    title: "Copy & Use",
-    desc: "Copy the generated prompt with one click and use it directly in your preferred AI model.",
-    color: "bg-pink-500",
-  },
+  { href: "/ai-prompt-generator", icon: Sparkles, name: "AI Prompt Generator", desc: "Transform ideas into professional AI prompts", badge: "Most Popular", gradient: "from-violet-500 to-purple-600" },
+  { href: "/prompt-checker", icon: CheckCircle, name: "Prompt Checker", desc: "Verify your prompt quality", badge: "Free", gradient: "from-emerald-500 to-teal-600" },
+  { href: "/image-prompt", icon: ImageIcon, name: "Image Prompts", desc: "Create stunning AI images", badge: "Popular", gradient: "from-pink-500 to-rose-600" },
+  { href: "/veo3-prompt", icon: Video, name: "VEO3 Video Prompts", desc: "Professional video generation", badge: "New", gradient: "from-amber-500 to-orange-600" },
+  { href: "/ai-humanizer", icon: Shield, name: "AI Humanizer", desc: "Make AI text sound human", badge: "Free", gradient: "from-cyan-500 to-blue-600" },
+  { href: "/image-to-prompt", icon: FileText, name: "Image to Prompt", desc: "Convert images to prompts", badge: "Popular", gradient: "from-indigo-500 to-violet-600" },
 ];
 
 const STATS = [
-  { value: "100K+", label: "Prompts Generated", icon: Zap, color: "text-violet-600" },
-  { value: "10+", label: "AI Models Supported", icon: Bot, color: "text-purple-600" },
-  { value: "100%", label: "Free to Use", icon: Star, color: "text-pink-600" },
-  { value: "24/7", label: "24/7 Available", icon: Users, color: "text-emerald-600" },
+  { value: "100K+", label: "Prompts Generated" },
+  { value: "10+", label: "AI Models Supported" },
+  { value: "100%", label: "Free to Use" },
 ];
-
-const TESTIMONIALS = [
-  { name: "Sarah Chen", role: "Content Creator", text: "This tool has completely transformed my workflow!", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" },
-  { name: "Mike Johnson", role: "Developer", text: "The best free prompt generator I've found.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" },
-  { name: "Emily Davis", role: "Marketer", text: "Saved me hours of work on content creation.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" },
-];
-
-const floatingOrbVariants = {
-  animate: {
-    y: [0, -30, 0],
-    x: [0, 15, 0],
-    scale: [1, 1.1, 1],
-  },
-};
-
-function FloatingOrb({ delay = 0, size = 100, color = "bg-violet-500" }: { delay?: number; size?: number; color?: string }) {
-  return (
-    <motion.div
-      className={`absolute rounded-full blur-3xl opacity-30 ${color}`}
-      style={{ width: size, height: size, willChange: "transform" }}
-      variants={floatingOrbVariants}
-      animate="animate"
-      transition={{
-        duration: 8,
-        delay,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-  );
-}
-
-function AnimatedCounter({ value, inView }: { value: string; inView: boolean }) {
-  const numericValue = parseInt(value.replace(/[^0-9]/g, ""));
-  const suffix = value.replace(/[0-9]/g, "");
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!inView) return;
-    
-    let frameId: number;
-    let startTime: number;
-    const duration = 2000;
-    const startCount = 0;
-    
-    const animate = (time: number) => {
-      if (!startTime) startTime = time;
-      const elapsed = time - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.floor(startCount + (numericValue - startCount) * eased);
-      
-      setCount(current);
-      
-      if (progress < 1) {
-        frameId = requestAnimationFrame(animate);
-      }
-    };
-    
-    frameId = requestAnimationFrame(animate);
-    
-    return () => {
-      if (frameId) cancelAnimationFrame(frameId);
-    };
-  }, [inView, numericValue]);
-
-  return <span>{count}{suffix}</span>;
-}
 
 export default function HomePage() {
   const [input, setInput] = useState("");
@@ -179,19 +42,14 @@ export default function HomePage() {
 
   const heroRef = useRef<HTMLElement>(null);
   const toolsRef = useRef<HTMLElement>(null);
-  const statsRef = useRef<HTMLElement>(null);
-
+  
   const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
   const toolsInView = useInView(toolsRef, { once: true, margin: "-100px" });
-  const statsInView = useInView(statsRef, { once: true, margin: "-100px" });
-
-  const { scrollYProgress } = useScroll();
-  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 4000);
+      setCurrentTestimonial((prev) => (prev + 1) % 3);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -200,659 +58,223 @@ export default function HomePage() {
     setIsGenerating(true);
     setOutput("");
 
-    let result = "";
-
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "ai-prompt", input, level: "advanced", category: selectedCategory, model: "claude" }),
+        body: JSON.stringify({ type: "ai-prompt", input, level: "advanced", category: selectedCategory, model: "chatgpt" }),
       });
 
-      if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
-      }
-
+      if (!res.ok) throw new Error("API error");
       const data = await res.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      
-      result = data.result || "";
-    } catch (err) {
-      console.error("Generation error:", err);
-      // Fallback - generate locally
-      const parts = input.split(/[\s,]+/).filter(Boolean);
-      const topic = parts.slice(0, 6).join(" ");
-      
-      const categoryPrompts: Record<string, string> = {
-        content: `You are an expert content writer with deep knowledge.\n\nCreate comprehensive content about: ${topic}\n\nAdditional Context:\n${input}\n\nProvide detailed, well-structured content with examples, engaging storytelling, and actionable insights.`,
-        business: `You are a business analyst and strategist.\n\nCreate a professional business document about: ${topic}\n\nAdditional Context:\n${input}\n\nInclude market analysis, strategic recommendations, financial considerations, and actionable business insights.`,
-        coding: `You are a senior software developer and coding expert.\n\nCreate comprehensive code and technical documentation about: ${topic}\n\nAdditional Context:\n${input}\n\nProvide clean, well-documented code with examples, best practices, and technical explanations.`,
-        creative: `You are a creative writer and innovative thinker.\n\nCreate creative content about: ${topic}\n\nAdditional Context:\n${input}\n\nExpress ideas with creativity, imagination, unique perspectives, and engaging narrative style.`,
+      if (data.error) throw new Error(data.error);
+      setOutput(data.result || "");
+    } catch {
+      const parts = input.split(/[\s,]+/).filter(Boolean).slice(0, 6).join(" ");
+      const fallback: Record<string, string> = {
+        content: `You are an expert content writer. Create content about: ${parts}`,
+        business: `You are a business analyst. Create a business document about: ${parts}`,
+        coding: `You are a software developer. Create code about: ${parts}`,
+        creative: `You are a creative writer. Create about: ${parts}`,
       };
-      
-      result = categoryPrompts[selectedCategory] || categoryPrompts.content;
-      toast.warning("Using local generation - API unavailable");
+      setOutput(fallback[selectedCategory] || fallback.content);
     }
 
-    if (result) {
-      setOutput(result);
-      toast.success("Prompt generated!");
-    } else {
-      toast.error("Failed to generate prompt");
-    }
     setIsGenerating(false);
+    if (output || !isGenerating) toast.success("Prompt generated!");
   };
 
   return (
-    <div className="overflow-x-hidden">
-      {/* Hero Section - Full Width Photo Background */}
-      <motion.section 
-        ref={heroRef}
-        className="relative min-h-[100vh] flex items-center"
-        style={{ y: heroY }}
-      >
-        {/* Full-width background image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ 
-            backgroundImage: `url(${HERO_IMAGE})`,
-            backgroundPosition: 'center',
-          }}
-        />
-        
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
-        
-        {/* Floating particles on top */}
-        <FloatingOrb delay={0} size={300} color="bg-violet-600" />
-        <FloatingOrb delay={2} size={200} color="bg-purple-600" />
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
-            <motion.div 
-              className="text-center lg:text-left"
-              initial={{ opacity: 0, y: 30 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8 }}
-            >
-              <motion.div 
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
-                whileHover={{ scale: 1.05 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <motion.div
-                  className="w-2 h-2 bg-violet-400 rounded-full"
-                  animate={{ scale: [1, 1.5, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-                <span className="text-sm font-medium text-white">
-                  100% Free — No Registration Required
-                </span>
-              </motion.div>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center">
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${HERO_IMAGE})` }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
 
-              <motion.h1 
-                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={heroInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6 }}
+              className="text-center lg:text-left"
+            >
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
                 The Most Advanced{" "}
                 <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                   Free AI Prompt Generator
                 </span>
-              </motion.h1>
+              </h1>
+              <p className="text-lg text-gray-300 mb-8 max-w-xl">
+                Transform your ideas into professional prompts for ChatGPT, Claude, Gemini, and more.
+              </p>
+              <Link href="/ai-prompt-generator">
+                <button className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-8 py-3 rounded-xl font-medium">
+                  Start Creating
+                </button>
+              </Link>
+            </motion.div>
 
-              <motion.p 
-                className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                Transform your ideas into professional prompts for ChatGPT, Claude, Gemini, and more. Enhance output quality and boost your productivity.
-              </motion.p>
-
-              <motion.div 
-                className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                {[
-                  { icon: Bot, label: "10+ AI Models", bg: "bg-white/10" },
-                  { icon: Brain, label: "500+ Prompts", bg: "bg-white/10" },
-                  { icon: Layers, label: "6 Tools", bg: "bg-white/10" },
-                ].map((item, i) => (
-                  <motion.div 
-                    key={i}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full ${item.bg} backdrop-blur-sm border border-white/10`}
-                    whileHover={{ scale: 1.1 }}
+            {/* Floating Board */}
+            <div className="hidden lg:block bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 min-h-[380px]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <Wand2 className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white font-semibold">Try it now</span>
+              </div>
+              
+              <textarea
+                placeholder="Describe your task..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
+              />
+              
+              <div className="flex gap-2 mb-4">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedCategory === cat.id ? "bg-violet-600 text-white" : "bg-white/20 text-white hover:bg-white/30"
+                    }`}
                   >
-                    <item.icon className="h-5 w-5 text-violet-400" />
-                    <span className="text-sm font-medium text-white">{item.label}</span>
-                  </motion.div>
+                    {cat.label}
+                  </button>
                 ))}
-              </motion.div>
-
-              <motion.div 
-                className="flex flex-wrap gap-4 justify-center lg:justify-start"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <Link href="/ai-prompt-generator">
-                  <motion.button 
-                    className="bg-gradient-to-r from-violet-600 to-purple-600 text-white h-12 px-8 rounded-xl text-base font-medium shadow-lg shadow-violet-500/30 flex items-center gap-2 backdrop-blur-sm"
-                    whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(124,58,237,0.5)" }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Sparkles className="h-5 w-5" />
-                    Start Creating
-                  </motion.button>
-                </Link>
-                
-              </motion.div>
-            </motion.div>
-
-            <motion.div 
-              className="hidden lg:block relative"
-              initial={{ opacity: 0, x: 50 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              {/* Try it card on the right side */}
-              <motion.div
-                className="relative"
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                style={{ willChange: "transform" }}
-              >
-                <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl min-h-[400px] flex flex-col">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                      <Wand2 className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-white font-semibold">Try it now</span>
-                  </div>
-                  <div className="flex-1 flex flex-col">
-                    <textarea
-                      placeholder="Describe your task... (e.g. Write a blog post about AI benefits)"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
-                    />
-                    <div className="flex flex-wrap items-center gap-2 mb-4">
-                      {CATEGORIES.map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => setSelectedCategory(cat.id)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                            selectedCategory === cat.id
-                              ? "bg-violet-600 text-white"
-                              : "bg-white/20 text-white hover:bg-white/30"
-                          }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs text-gray-300">{input.length}/500</span>
-                      <motion.button
-                        onClick={handleGenerate}
-                        disabled={!input.trim() || isGenerating}
-                        className="bg-gradient-to-r from-violet-600 to-purple-600 text-white h-10 px-5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all disabled:opacity-50"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {isGenerating ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Generating...</>
-                        ) : (
-                          <><Wand2 className="h-4 w-4" />Generate</>
-                        )}
-                      </motion.button>
-                    </div>
-                    <div className="flex-1 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden flex flex-col">
-                      <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10 shrink-0">
-                        <span className="text-xs font-medium text-white/80">Generated Prompt</span>
-                        {output && (
-                          <button
-                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
-                          >
-                            <Copy className="h-4 w-4" />
-                            Copy
-                          </button>
-                        )}
-                      </div>
-                      <div className="p-4 overflow-y-auto flex-1">
-                        {isGenerating ? (
-                          <div className="flex items-center justify-center h-full min-h-[120px]">
-                            <div className="text-center">
-                              <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
-                              <span className="text-sm text-white/60">Generating your prompt...</span>
-                            </div>
-                          </div>
-                        ) : output ? (
-                          <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
-                        ) : (
-                          <div className="flex items-center justify-center h-full min-h-[120px]">
-                            <div className="text-center">
-                              <Wand2 className="h-10 w-10 text-white/30 mx-auto mb-2" />
-                              <p className="text-white/50 text-sm">Enter a prompt and click Generate</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      {output && (
-                        <div className="px-4 pb-4 shrink-0">
-                          <button
-                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                          >
-                            <Copy className="h-4 w-4" />
-                            Copy to Clipboard
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <ChevronDown className="h-6 w-6 text-white/60" />
-        </motion.div>
-      </motion.section>
-
-      {/* Quick Try Section - Mobile only */}
-      <section className="lg:hidden py-12 px-4 bg-gradient-to-b from-black to-gray-900">
-        <div className="max-w-md mx-auto p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl min-h-[400px] flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-              <Wand2 className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-white font-semibold">Quick Try</span>
-          </div>
-          <div className="flex-1 flex flex-col">
-            <textarea
-              placeholder="Enter your idea..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-full min-h-[80px] rounded-xl bg-white/10 backdrop-blur border border-white/20 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-violet-500 resize-none mb-4"
-            />
-            <motion.button
-              onClick={handleGenerate}
-              disabled={!input.trim() || isGenerating}
-              className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50 mb-4"
-              whileTap={{ scale: 0.95 }}
-            >
-              {isGenerating ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Generating...</>
-              ) : (
-                <><Wand2 className="h-4 w-4" />Generate Prompt</>
-              )}
-            </motion.button>
-            <div className="flex-1 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10 shrink-0">
-                <span className="text-xs font-medium text-white/80">Generated Prompt</span>
-                {output && (
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </button>
-                )}
               </div>
-              <div className="p-4 overflow-y-auto flex-1">
-                {isGenerating ? (
-                  <div className="flex items-center justify-center h-full min-h-[100px]">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
-                      <span className="text-sm text-white/60">Generating your prompt...</span>
-                    </div>
-                  </div>
-                ) : output ? (
-                  <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+              
+              <button
+                onClick={handleGenerate}
+                disabled={!input.trim() || isGenerating}
+                className="bg-gradient-to-r from-violet-600 to-purple-600 text-white h-10 px-5 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+              >
+                {isGenerating ? <><Loader2 className="h-4 w-4 animate-spin" />Generating...</> : <><Wand2 className="h-4 w-4" />Generate</>}
+              </button>
+
+              <div className="mt-4 rounded-xl bg-black/40 border border-white/20 p-4 min-h-[100px]">
+                {output ? (
+                  <pre className="text-sm text-white whitespace-pre-wrap font-mono">{output}</pre>
                 ) : (
-                  <div className="flex items-center justify-center h-full min-h-[100px]">
-                    <div className="text-center">
-                      <Wand2 className="h-10 w-10 text-white/30 mx-auto mb-2" />
-                      <p className="text-white/50 text-sm">Enter a prompt and click Generate</p>
-                    </div>
-                  </div>
+                  <p className="text-white/50 text-sm">Enter a prompt and click Generate</p>
                 )}
               </div>
-              {output && (
-                <div className="px-4 pb-4 shrink-0">
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy to Clipboard
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Tools Grid */}
-      <motion.section 
-        ref={toolsRef}
-        className="py-20 sm:py-32 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-violet-50/30 to-white" />
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
+      {/* Tools Section */}
+      <section ref={toolsRef} className="py-20 bg-gradient-to-b from-white to-violet-50/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
             animate={toolsInView ? { opacity: 1, y: 0 } : {}}
+            className="text-3xl sm:text-4xl font-bold text-center mb-12"
           >
-            <motion.span 
-              className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-violet-100 to-purple-100 text-sm font-medium text-violet-700 mb-4"
-              initial={{ scale: 0 }}
-              animate={toolsInView ? { scale: 1 } : {}}
-            >
-              ✨ All the Tools You Need
-            </motion.span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Supercharge Your <span className="bg-gradient-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent">AI Workflow</span>
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              A complete suite of AI prompt tools — from text generation to image prompts, all in one place.
-            </p>
-          </motion.div>
+            All the <span className="bg-gradient-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent">Tools You Need</span>
+          </motion.h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TOOLS.map((tool, i) => {
-              const Icon = tool.icon;
-              return (
-                <motion.div
-                  key={tool.href}
-                  initial={{ opacity: 0, y: 30 }}
+            {TOOLS.map((tool, i) => (
+              <Link key={tool.href} href={tool.href}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
                   animate={toolsInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: i * 0.1 }}
+                  className="group h-full bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:border-violet-200 transition-all hover:shadow-xl"
                 >
-                  <Link href={tool.href}>
-                    <motion.div
-                      className="group relative h-full bg-white rounded-2xl p-6 shadow-lg border-2 border-transparent hover:border-transparent cursor-pointer overflow-hidden"
-                      whileHover={{ y: -5 }}
-                    >
-                      <motion.div 
-                        className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} ${tool.hoverGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-                      />
-                      
-                      <div className="relative z-10">
-                        <div className="flex items-start justify-between mb-4">
-                          <motion.div 
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${tool.gradient} text-white shadow-lg`}
-                            whileHover={{ rotate: [0, -10, 10, 0] }}
-                            transition={{ duration: 0.5 }}
-                          >
-                            <Icon className="h-6 w-6" />
-                          </motion.div>
-                          <Badge className={`bg-gradient-to-r ${tool.gradient} text-white border-0`}>
-                            {tool.badge}
-                          </Badge>
-                        </div>
-                        
-                        <motion.h3 
-                          className="text-xl font-bold text-gray-900 mb-2 group-hover:text-white transition-colors"
-                        >
-                          {tool.name}
-                        </motion.h3>
-                        
-                        <p className="text-sm text-gray-600 group-hover:text-white/80 leading-relaxed mb-4">
-                          {tool.desc}
-                        </p>
-                        
-                        <motion.div 
-                          className="flex items-center gap-1 text-sm font-semibold text-violet-600 group-hover:text-white transition-colors"
-                          whileHover={{ x: 5 }}
-                        >
-                          Use Tool <ArrowRight className="h-4 w-4" />
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* How It Works */}
-      <section className="py-20 sm:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-violet-50" />
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-sm font-medium text-purple-700 mb-4">
-              🚀 Simple Process
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Create Perfect AI Prompts <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">in Seconds</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {STEPS.map((step, i) => (
-              <motion.div
-                key={step.number}
-                className="relative text-center"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-              >
-                <motion.div 
-                  className={`flex h-20 w-20 items-center justify-center rounded-3xl ${step.color} text-white text-2xl font-bold mb-6 shadow-xl mx-auto`}
-                  whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
-                >
-                  {step.number}
-                </motion.div>
-                
-                {i < STEPS.length - 1 && (
-                  <div className="hidden md:block absolute top-10 left-[60%] w-[80%]">
-                    <motion.div 
-                      className="w-full h-1 bg-gradient-to-r from-violet-400 to-purple-400 rounded-full"
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + i * 0.2 }}
-                    />
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${tool.gradient} text-white`}>
+                      <tool.icon className="h-6 w-6" />
+                    </div>
+                    <Badge className={`bg-gradient-to-r ${tool.gradient} text-white border-0 text-xs`}>
+                      {tool.badge}
+                    </Badge>
                   </div>
-                )}
-                
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{step.desc}</p>
-              </motion.div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-violet-600 transition-colors">{tool.name}</h3>
+                  <p className="text-sm text-gray-600">{tool.desc}</p>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <motion.section 
-        ref={statsRef}
-        className="py-20 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600" />
-        
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            background: [
-              "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, transparent 50%)",
-              "linear-gradient(135deg, rgba(147,51,234,0.1) 0%, transparent 50%)",
-              "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, transparent 50%)",
-            ],
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <section className="py-16 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-3 gap-8 text-center">
             {STATS.map((stat, i) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={statsInView ? { opacity: 1, scale: 1 } : {}}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <motion.div 
-                  className={`text-4xl sm:text-5xl font-bold text-white mb-2`}
-                >
-                  <AnimatedCounter value={stat.value} inView={statsInView} />
-                </motion.div>
-                <div className="flex items-center justify-center gap-2 text-white/80">
-                  <stat.icon className={`h-5 w-5 ${stat.color.replace('text-', 'text-white/')}`} />
-                  <span className="text-sm font-medium">{stat.label}</span>
-                </div>
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{stat.value}</div>
+                <div className="text-white/80 text-sm">{stat.label}</div>
               </motion.div>
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Testimonials */}
-      <section className="py-20 sm:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-white to-violet-50/30" />
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-pink-100 to-rose-100 text-sm font-medium text-pink-700 mb-4">
-              💬 Testimonials
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-gray-900">
-              Loved by <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">Thousands</span>
-            </h2>
-          </motion.div>
+      <section className="py-20 bg-white">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-8">
+            Loved by <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">Thousands</span>
+          </h2>
+          
+          <div className="relative h-[200px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTestimonial}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute inset-0"
+              >
+                <Card className="h-full p-8 text-center border-0 shadow-xl">
+                  <p className="text-lg text-gray-700 mb-4">"{["This tool has completely transformed my workflow!", "The best free prompt generator I've found.", "Saved me hours of work on content creation."][currentTestimonial]}"</p>
+                  <p className="font-bold text-gray-900">{["Sarah Chen", "Mike Johnson", "Emily Davis"][currentTestimonial]}</p>
+                  <p className="text-sm text-gray-500">{["Content Creator", "Developer", "Marketer"][currentTestimonial]}</p>
+                </Card>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-          <div className="max-w-3xl mx-auto">
-            <div className="relative h-[300px]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentTestimonial}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  className="absolute inset-0"
-                >
-                  <Card className="h-full p-8 text-center bg-white/80 backdrop-blur border-0 shadow-xl">
-                    <img 
-                      src={TESTIMONIALS[currentTestimonial].avatar}
-                      alt={TESTIMONIALS[currentTestimonial].name}
-                      className="w-16 h-16 rounded-full mx-auto mb-4 object-cover"
-                    />
-                    <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-                      &ldquo;{TESTIMONIALS[currentTestimonial].text}&rdquo;
-                    </p>
-                    <p className="font-bold text-gray-900">{TESTIMONIALS[currentTestimonial].name}</p>
-                    <p className="text-sm text-gray-500">{TESTIMONIALS[currentTestimonial].role}</p>
-                  </Card>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            
-            <div className="flex justify-center gap-2 mt-8">
-              {TESTIMONIALS.map((_, i) => (
-                <motion.button
-                  key={i}
-                  onClick={() => setCurrentTestimonial(i)}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    i === currentTestimonial 
-                      ? "bg-gradient-to-r from-violet-600 to-purple-600 w-8" 
-                      : "bg-gray-300 hover:bg-gray-400"
-                  }`}
-                  whileHover={{ scale: 1.2 }}
-                />
-              ))}
-            </div>
+          <div className="flex justify-center gap-2 mt-6">
+            {[0, 1, 2].map((i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentTestimonial(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === currentTestimonial ? "w-8 bg-gradient-to-r from-violet-600 to-purple-600" : "w-2 bg-gray-300"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <motion.section 
-        className="py-20 sm:py-32 relative overflow-hidden"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600" />
-        
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 10, repeat: Infinity }}
-        >
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.2),transparent_50%)]" />
-        </motion.div>
-        
-        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h2 
-            className="text-3xl sm:text-5xl font-bold text-white mb-6"
-            initial={{ y: 30 }}
-            whileInView={{ y: 0 }}
-            viewport={{ once: true }}
-          >
+      <section className="py-20 bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 text-center">
+        <div className="max-w-2xl mx-auto px-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Ready to Transform Your AI Prompts?
-          </motion.h2>
-          
-          <motion.p 
-            className="text-lg text-white/80 mb-8 max-w-2xl mx-auto"
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-          >
-            Start generating professional AI prompts for free. No registration, no hidden costs.
-          </motion.p>
-          
+          </h2>
+          <p className="text-white/80 mb-8">Start generating professional AI prompts for free.</p>
           <Link href="/ai-prompt-generator">
-            <motion.button 
-              className="bg-white text-violet-600 h-14 px-10 rounded-xl text-base font-bold shadow-xl flex items-center gap-2 mx-auto"
-              whileHover={{ scale: 1.05, boxShadow: "0 30px 60px rgba(0,0,0,0.3)" }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Sparkles className="h-5 w-5" />
-              Start Creating for Free
-            </motion.button>
+            <button className="bg-white text-violet-600 px-10 py-3 rounded-xl font-bold">
+              Start for Free
+            </button>
           </Link>
         </div>
-      </motion.section>
+      </section>
     </div>
   );
 }
