@@ -85,7 +85,7 @@ export function Footer() {
               alt="RAFBUG"
               width={24}
               height={24}
-              className="h-6 w-auto"
+              className="h-6 w-auto invert"
             />
           </a>
           
