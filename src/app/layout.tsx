@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { CustomScrollbar, HideDefaultScrollbar } from "@/components/CustomScrollbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +55,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+        <HideDefaultScrollbar />
+        <CustomScrollbar />
         <div className="min-h-screen flex flex-col">
           <Navbar />
           <main className="flex-1">{children}</main>
