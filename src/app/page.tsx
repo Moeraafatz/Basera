@@ -262,7 +262,7 @@ export default function HomePage() {
               >
                 {[
                   { icon: Bot, label: "10+ AI Models", bg: "bg-white/10" },
-                  { icon: Brain, label: "100+ Prompts", bg: "bg-white/10" },
+                  { icon: Brain, label: "500+ Prompts", bg: "bg-white/10" },
                   { icon: Layers, label: "6 Tools", bg: "bg-white/10" },
                 ].map((item, i) => (
                   <motion.div 

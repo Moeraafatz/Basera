@@ -368,7 +368,7 @@ export default function PromptLibraryPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30">
                 <BookOpen className="h-5 w-5" />
               </div>
-              <Badge className="bg-gradient-to-r from-rose-500 to-pink-500 text-white border-0 px-3 py-1">100+ Prompts</Badge>
+              <Badge className="bg-gradient-to-r from-rose-500 to-pink-500 text-white border-0 px-3 py-1">500+ Prompts</Badge>
             </div>
             <motion.button
               onClick={() => setSelectedModel(selectedModel === null ? "claude" : null)}
