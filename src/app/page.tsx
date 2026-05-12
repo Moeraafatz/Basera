@@ -319,17 +319,17 @@ export default function HomePage() {
                     placeholder="Describe your task... (e.g. Write a blog post about AI benefits)"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="w-full min-h-[80px] rounded-xl bg-white/10 backdrop-blur border border-white/20 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-violet-500 resize-none mb-4"
+                    className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
                   />
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     {["📝 Content", "💼 Business", "💻 Coding", "✍️ Creative"].map((cat) => (
-                      <span key={cat} className="px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs font-medium">
+                      <span key={cat} className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
                         {cat}
                       </span>
                     ))}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">{input.length}/500</span>
+                    <span className="text-xs text-gray-300">{input.length}/500</span>
                     <motion.button
                       onClick={handleGenerate}
                       disabled={!input.trim() || isGenerating}
@@ -350,7 +350,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 p-4 rounded-xl bg-white/10 backdrop-blur border border-white/20"
+                        className="mt-4 p-4 rounded-xl bg-white/20 backdrop-blur border border-white/30"
                       >
                         <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
                       </motion.div>
