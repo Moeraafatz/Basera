@@ -83,92 +83,54 @@ export function CustomScrollbar() {
   };
 
   const trackHeight = 256;
-  const thumbHeight = 64;
+  const thumbHeight = 48;
   const maxThumbPosition = trackHeight - thumbHeight;
   const thumbPosition = scrollProgress * maxThumbPosition;
 
   return (
     <motion.div
-      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex items-center justify-center"
+      className="fixed right-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex items-center justify-center"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 1 }}
     >
-      <div className="relative flex items-center gap-3">
-        
-        {/* Left line */}
-        <div className="w-px h-64">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/30 to-violet-500/30" />
-        </div>
-
-        {/* Track */}
-        <div
-          ref={trackRef}
-          className="relative w-1.5 h-64 rounded-full"
-          onClick={handleTrackClick}
-          style={{ background: 'transparent' }}
+      <div 
+        ref={trackRef}
+        className="relative cursor-pointer"
+        onClick={handleTrackClick}
+      >
+        {/* Thumb - floating, fully transparent with subtle border */}
+        <motion.div
+          className="absolute w-2 h-12 rounded-full cursor-grab select-none"
+          style={{ 
+            top: thumbPosition,
+            backgroundColor: 'transparent',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2), inset 0 0 4px rgba(255, 255, 255, 0.1)',
+          }}
+          onMouseDown={handleMouseDown}
+          whileHover={{ 
+            scale: 1.1,
+            border: '1px solid rgba(255, 255, 255, 0.5)',
+            boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)',
+          }}
+          whileTap={{ 
+            scale: 0.95,
+            cursor: 'grabbing',
+          }}
+          animate={{
+            boxShadow: isDragging 
+              ? "0 0 20px rgba(255, 255, 255, 0.3)" 
+              : "0 0 10px rgba(0, 0, 0, 0.2), inset 0 0 4px rgba(255, 255, 255, 0.1)",
+          }}
         >
-          {/* Thumb - floating, no background fill */}
-          <motion.div
-            className="absolute left-1/2 -translate-x-1/2 w-3 h-14 rounded-full cursor-grab select-none border border-white/30"
-            style={{ 
-              top: thumbPosition,
-              backgroundColor: 'rgba(139, 92, 246, 0.6)',
-            }}
-            onMouseDown={handleMouseDown}
-            whileHover={{ 
-              scale: 1.15,
-              backgroundColor: 'rgba(139, 92, 246, 0.9)',
-            }}
-            whileTap={{ 
-              scale: 0.9,
-              cursor: 'grabbing',
-            }}
-            animate={{
-              boxShadow: isDragging 
-                ? "0 0 25px rgba(139, 92, 246, 0.9)" 
-                : "0 0 10px rgba(139, 92, 246, 0.3)",
-            }}
-          >
-            {/* Grip dots inside thumb */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1.5">
-              <div className="w-1 h-1 rounded-full bg-white/80" />
-              <div className="w-1 h-1 rounded-full bg-white/80" />
-              <div className="w-1 h-1 rounded-full bg-white/80" />
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right line */}
-        <div className="w-px h-64">
-          <div className="absolute inset-0 bg-gradient-to-b from-pink-500/30 via-purple-500/30 to-transparent" />
-        </div>
-
-        {/* Side dots */}
-        <div className="absolute right-8 flex flex-col gap-2">
-          {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
-            <motion.div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-white/20"
-              animate={{
-                opacity: Math.abs(scrollProgress - pos) < 0.15 ? 1 : 0.2,
-                scale: Math.abs(scrollProgress - pos) < 0.15 ? 1.3 : 1,
-              }}
-            />
-          ))}
-        </div>
-        <div className="absolute left-8 flex flex-col gap-2">
-          {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
-            <motion.div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-white/20"
-              animate={{
-                opacity: Math.abs(scrollProgress - pos) < 0.15 ? 1 : 0.2,
-                scale: Math.abs(scrollProgress - pos) < 0.15 ? 1.3 : 1,
-              }}
-            />
-          ))}
-        </div>
+          {/* Subtle grip lines */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1">
+            <div className="w-1 h-0.5 rounded-full bg-white/40" />
+            <div className="w-1 h-0.5 rounded-full bg-white/40" />
+            <div className="w-1 h-0.5 rounded-full bg-white/40" />
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );
