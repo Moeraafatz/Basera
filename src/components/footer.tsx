@@ -89,7 +89,7 @@ export function Footer() {
             © {new Date().getFullYear()} Prompt Engineer. All rights reserved.
           </p>
           
-          <div className="flex items-center gap-2">
+          <a href="https://www.rafbug.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-sm text-muted-foreground">Powered By</span>
             <Image
               src="/rafbug-logo.png"
@@ -98,7 +98,7 @@ export function Footer() {
               height={24}
               className="h-6 w-auto"
             />
-          </div>
+          </a>
           
           <p className="text-sm text-muted-foreground">
             Free AI Prompt Generator — No registration required
