@@ -7,7 +7,7 @@ export function CustomScrollbar() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef({ y: 0, scrollTop: 0 });
+  const dragStartRef = useRef({ thumbY: 0, scrollTop: 0 });
 
   const updateProgress = useCallback(() => {
     const scrollTop = window.scrollY;
@@ -19,13 +19,13 @@ export function CustomScrollbar() {
 
   useEffect(() => {
     updateProgress();
-    
+
     const handleScroll = () => updateProgress();
     const handleResize = () => updateProgress();
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleResize, { passive: true });
-    
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
@@ -37,7 +37,7 @@ export function CustomScrollbar() {
     e.stopPropagation();
     setIsDragging(true);
     dragStartRef.current = {
-      y: e.clientY,
+      thumbY: e.clientY,
       scrollTop: window.scrollY,
     };
   };
@@ -46,11 +46,12 @@ export function CustomScrollbar() {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = e.clientY - dragStartRef.current.y;
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollDelta = (deltaY / scrollHeight) * document.documentElement.scrollHeight;
+      const deltaY = e.clientY - dragStartRef.current.thumbY;
+      const viewportHeight = window.innerHeight;
+      const scrollableHeight = document.documentElement.scrollHeight - viewportHeight;
+      const scrollDelta = (deltaY / viewportHeight) * document.documentElement.scrollHeight;
       window.scrollTo({
-        top: dragStartRef.current.scrollTop + scrollDelta,
+        top: Math.max(0, Math.min(scrollableHeight, dragStartRef.current.scrollTop + scrollDelta)),
         behavior: "auto",
       });
     };
@@ -69,13 +70,13 @@ export function CustomScrollbar() {
   }, [isDragging]);
 
   const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!trackRef.current) return;
-    
+    if (!trackRef.current || isDragging) return;
+
     const rect = trackRef.current.getBoundingClientRect();
     const relativeY = e.clientY - rect.top;
     const percentage = Math.max(0, Math.min(1, relativeY / rect.height));
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    
+
     window.scrollTo({
       top: percentage * scrollHeight,
       behavior: "smooth",
@@ -94,41 +95,24 @@ export function CustomScrollbar() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 1 }}
     >
-      <div 
+      <div
         ref={trackRef}
-        className="relative cursor-pointer"
+        className="relative cursor-pointer h-64 w-3 bg-white/10 rounded-full"
         onClick={handleTrackClick}
       >
-        {/* Thumb - floating, fully transparent with subtle border */}
+        {/* Thumb */}
         <motion.div
-          className="absolute w-2 h-12 rounded-full cursor-grab select-none"
-          style={{ 
-            top: thumbPosition,
-            backgroundColor: 'transparent',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2), inset 0 0 4px rgba(255, 255, 255, 0.1)',
-          }}
+          className="absolute w-3 h-12 -left-0.5 rounded-full cursor-grab select-none bg-gradient-to-b from-violet-400 to-purple-500"
+          style={{ top: thumbPosition }}
           onMouseDown={handleMouseDown}
-          whileHover={{ 
-            scale: 1.1,
-            border: '1px solid rgba(255, 255, 255, 0.5)',
-            boxShadow: '0 0 15px rgba(255, 255, 255, 0.2)',
-          }}
-          whileTap={{ 
-            scale: 0.95,
-            cursor: 'grabbing',
-          }}
-          animate={{
-            boxShadow: isDragging 
-              ? "0 0 20px rgba(255, 255, 255, 0.3)" 
-              : "0 0 10px rgba(0, 0, 0, 0.2), inset 0 0 4px rgba(255, 255, 255, 0.1)",
-          }}
+          whileHover={{ scaleX: 1.2 }}
+          whileTap={{ scale: 0.9, cursor: "grabbing" }}
+          animate={{ scale: isDragging ? 1.1 : 1 }}
         >
-          {/* Subtle grip lines */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1">
-            <div className="w-1 h-0.5 rounded-full bg-white/40" />
-            <div className="w-1 h-0.5 rounded-full bg-white/40" />
-            <div className="w-1 h-0.5 rounded-full bg-white/40" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+            <div className="w-1 h-0.5 rounded-full bg-white/60" />
+            <div className="w-1 h-0.5 rounded-full bg-white/60" />
+            <div className="w-1 h-0.5 rounded-full bg-white/60" />
           </div>
         </motion.div>
       </div>
