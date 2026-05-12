@@ -141,6 +141,14 @@ export default function HomePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState("");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState("general");
+
+  const categories = [
+    { id: "content", label: "📝 Content" },
+    { id: "business", label: "💼 Business" },
+    { id: "coding", label: "💻 Coding" },
+    { id: "creative", label: "✍️ Creative" },
+  ];
   
   const heroRef = useRef(null);
   const toolsRef = useRef(null);
@@ -170,7 +178,7 @@ export default function HomePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "ai-prompt", input, level: "advanced", category: "general", model: "claude" }),
+        body: JSON.stringify({ type: "ai-prompt", input, level: "advanced", category: selectedCategory, model: "claude" }),
       });
       const data = await res.json();
       setOutput(data.result || "");
@@ -178,7 +186,15 @@ export default function HomePage() {
     } catch {
       const parts = input.split(/[\s,]+/).filter(Boolean);
       const topic = parts.slice(0, 6).join(" ");
-      setOutput(`You are an expert AI assistant with deep knowledge.\n\nCreate comprehensive content about: ${topic}\n\nAdditional Context:\n${input}\n\nProvide a detailed, well-structured response with examples. Include reasoning steps and actionable recommendations.`);
+      
+      const categoryPrompts: Record<string, string> = {
+        content: `You are an expert content writer with deep knowledge.\n\nCreate comprehensive content about: ${topic}\n\nAdditional Context:\n${input}\n\nProvide detailed, well-structured content with examples, engaging storytelling, and actionable insights.`,
+        business: `You are a business analyst and strategist.\n\nCreate a professional business document about: ${topic}\n\nAdditional Context:\n${input}\n\nInclude market analysis, strategic recommendations, financial considerations, and actionable business insights.`,
+        coding: `You are a senior software developer and coding expert.\n\nCreate comprehensive code and technical documentation about: ${topic}\n\nAdditional Context:\n${input}\n\nProvide clean, well-documented code with examples, best practices, and technical explanations.`,
+        creative: `You are a creative writer and innovative thinker.\n\nCreate creative content about: ${topic}\n\nAdditional Context:\n${input}\n\nExpress ideas with creativity, imagination, unique perspectives, and engaging narrative style.`,
+      };
+      
+      setOutput(categoryPrompts[selectedCategory] || categoryPrompts.content);
     }
 
     setIsGenerating(false);
@@ -322,10 +338,18 @@ export default function HomePage() {
                     className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
                   />
                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                    {["📝 Content", "💼 Business", "💻 Coding", "✍️ Creative"].map((cat) => (
-                      <span key={cat} className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
-                        {cat}
-                      </span>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                          selectedCategory === cat.id
+                            ? "bg-violet-600 text-white"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
                     ))}
                   </div>
                   <div className="flex items-center justify-between">
