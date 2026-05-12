@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Prompt Engineer - Free AI Prompt Generator
+
+A modern, colorful AI prompt generator with multiple tools for creating professional prompts for ChatGPT, Claude, Gemini, and more.
+
+**Live Site:** https://prompt-eng-ebon.vercel.app
+
+## Features
+
+- **AI Prompt Generator** - Transform ideas into professional AI prompts
+- **Image Prompt Generator** - Create prompts for DALL-E, Midjourney, Stable Diffusion, FLUX
+- **VEO3 Video Prompts** - Professional prompts for AI video generation
+- **AI Humanizer** - Make AI content sound natural and human-written
+- **Prompt Checker** - Verify and improve your prompt quality
+- **Prompt Library** - 100+ pre-built prompts for various use cases
+- **Image to Prompt** - Convert any image into detailed AI prompts
+
+## Tech Stack
+
+- Next.js 16.2.6 with Turbopack
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Framer Motion (animations)
+- Lucide React (icons)
+- Sonner (toasts)
+- OpenRouter API + Google Gemini (AI backend)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Deploy to Vercel
+vercel --prod
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+OPENAI_API_KEY=your-openrouter-api-key
+GOOGLE_API_KEY=your-gemini-api-key
+```
 
-## Learn More
+## Colorful Design
 
-To learn more about Next.js, take a look at the following resources:
+Each tool has a unique gradient color scheme:
+- AI Prompt Generator: Violet/Purple
+- Image Prompts: Pink/Rose
+- VEO3 Video Prompts: Amber/Orange
+- AI Humanizer: Cyan/Blue
+- Prompt Checker: Emerald/Teal
+- Image to Prompt: Indigo/Violet
+- Prompt Library: Rose/Pink
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deployed on Vercel: https://prompt-eng-ebon.vercel.app
 
-## Deploy on Vercel
+### Vercel Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Connect your Git repository to Vercel
+2. Add environment variables in Vercel dashboard:
+   - `OPENAI_API_KEY`
+   - `GOOGLE_API_KEY`
+3. Deploy automatically on push to main branch
