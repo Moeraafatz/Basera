@@ -142,6 +142,7 @@ export default function HomePage() {
   const [output, setOutput] = useState("");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("general");
+  const [activeTab, setActiveTab] = useState<"create" | "results">("create");
 
   const categories = [
     { id: "content", label: "📝 Content" },
@@ -200,6 +201,7 @@ export default function HomePage() {
     }
 
     setOutput(result);
+    setActiveTab("results");
     setIsGenerating(false);
     toast.success("Prompt generated!");
   };
@@ -335,6 +337,33 @@ export default function HomePage() {
                     </div>
                     <span className="text-white font-semibold">Try it now</span>
                   </div>
+                  <div className="flex gap-1 mb-4 p-1 bg-white/10 rounded-xl">
+                    <button
+                      onClick={() => setActiveTab("create")}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === "create"
+                          ? "bg-white/20 text-white"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("results")}
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                        activeTab === "results"
+                          ? "bg-white/20 text-white"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Results
+                      {output && (
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                      )}
+                    </button>
+                  </div>
+                  {activeTab === "create" ? (
+                    <>
                   <textarea
                     placeholder="Describe your task... (e.g. Write a blog post about AI benefits)"
                     value={input}
@@ -372,31 +401,49 @@ export default function HomePage() {
                       )}
                     </motion.button>
                   </div>
-                  <AnimatePresence>
-                    {output && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, y: -10 }}
-                        animate={{ opacity: 1, height: "auto", y: 0 }}
-                        exit={{ opacity: 0, height: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10">
-                          <span className="text-xs font-medium text-white/80">Generated Prompt</span>
+                    </>
+                  ) : (
+                    <div className="min-h-[200px] flex flex-col">
+                      {isGenerating ? (
+                        <div className="flex-1 flex items-center justify-center">
+                          <div className="text-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
+                            <span className="text-sm text-white/60">Generating your prompt...</span>
+                          </div>
+                        </div>
+                      ) : output ? (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-white/80">Generated Prompt</span>
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
+                            >
+                              <Copy className="h-4 w-4" />
+                              Copy
+                            </button>
+                          </div>
+                          <div className="flex-1 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 p-4 max-h-[300px] overflow-y-auto">
+                            <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                          </div>
                           <button
-                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-xs font-medium transition-colors"
+                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied!"); }}
+                            className="mt-3 w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                           >
-                            <Copy className="h-3.5 w-3.5" />
-                            Copy
+                            <Copy className="h-4 w-4" />
+                            Copy to Clipboard
                           </button>
+                        </>
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center text-center">
+                          <div>
+                            <Wand2 className="h-12 w-12 text-white/30 mx-auto mb-3" />
+                            <p className="text-white/60 text-sm">No results yet. Try generating a prompt!</p>
+                          </div>
                         </div>
-                        <div className="p-4 max-h-[300px] overflow-y-auto">
-                          <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      )}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </motion.div>
@@ -422,6 +469,33 @@ export default function HomePage() {
             </div>
             <span className="text-white font-semibold">Quick Try</span>
           </div>
+          <div className="flex gap-1 mb-4 p-1 bg-white/10 rounded-xl">
+            <button
+              onClick={() => setActiveTab("create")}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "create"
+                  ? "bg-white/20 text-white"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              Create
+            </button>
+            <button
+              onClick={() => setActiveTab("results")}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                activeTab === "results"
+                  ? "bg-white/20 text-white"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              Results
+              {output && (
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              )}
+            </button>
+          </div>
+          {activeTab === "create" ? (
+            <>
           <textarea
             placeholder="Enter your idea..."
             value={input}
@@ -440,31 +514,49 @@ export default function HomePage() {
               <><Wand2 className="h-4 w-4" />Generate Prompt</>
             )}
           </motion.button>
-          <AnimatePresence>
-            {output && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: -10 }}
-                animate={{ opacity: 1, height: "auto", y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10">
-                  <span className="text-xs font-medium text-white/80">Generated Prompt</span>
+            </>
+          ) : (
+            <div className="min-h-[200px] flex flex-col">
+              {isGenerating ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
+                    <span className="text-sm text-white/60">Generating your prompt...</span>
+                  </div>
+                </div>
+              ) : output ? (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-white/80">Generated Prompt</span>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy
+                    </button>
+                  </div>
+                  <div className="flex-1 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 p-4 max-h-[250px] overflow-y-auto">
+                    <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                  </div>
                   <button
-                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-xs font-medium transition-colors"
+                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied!"); }}
+                    className="mt-3 w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
                   >
-                    <Copy className="h-3.5 w-3.5" />
-                    Copy
+                    <Copy className="h-4 w-4" />
+                    Copy to Clipboard
                   </button>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-center">
+                  <div>
+                    <Wand2 className="h-12 w-12 text-white/30 mx-auto mb-3" />
+                    <p className="text-white/60 text-sm">No results yet. Try generating a prompt!</p>
+                  </div>
                 </div>
-                <div className="p-4 max-h-[250px] overflow-y-auto">
-                  <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </div>
+          )}
         </Card>
       </section>
 
