@@ -292,14 +292,7 @@ export default function HomePage() {
                     Start Creating
                   </motion.button>
                 </Link>
-                <motion.button 
-                  className="bg-white/10 backdrop-blur-sm text-white h-12 px-8 rounded-xl text-base font-medium border border-white/20 flex items-center gap-2 hover:bg-white/20 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Play className="h-5 w-5" />
-                  Watch Demo
-                </motion.button>
+                
               </motion.div>
             </motion.div>
 
