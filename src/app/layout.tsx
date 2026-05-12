@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: "Prompt Engineer — Free AI Prompt Generator",
   description: "Transform your ideas into powerful, precise prompts for AI conversations. Free AI prompt generator for ChatGPT, Claude, Gemini, and more.",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/logo.svg",
+    apple: "/logo.svg",
   },
   openGraph: {
     title: "Prompt Engineer — Free AI Prompt Generator",
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/rafbug-logo.png",
-        width: 1200,
-        height: 630,
+        url: "/logo.svg",
+        width: 512,
+        height: 512,
         alt: "Prompt Engineer",
       },
     ],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Prompt Engineer — Free AI Prompt Generator",
     description: "Transform your ideas into powerful, precise prompts for AI conversations.",
-    images: ["/rafbug-logo.png"],
+    images: ["/logo.svg"],
   },
 };
 
