@@ -18,6 +18,32 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Prompt Engineer — Free AI Prompt Generator",
   description: "Transform your ideas into powerful, precise prompts for AI conversations. Free AI prompt generator for ChatGPT, Claude, Gemini, and more.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "Prompt Engineer — Free AI Prompt Generator",
+    description: "Transform your ideas into powerful, precise prompts for AI conversations. Free AI prompt generator for ChatGPT, Claude, Gemini, and more.",
+    url: "https://prompt.eng",
+    siteName: "Prompt Engineer",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/rafbug-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Prompt Engineer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Prompt Engineer — Free AI Prompt Generator",
+    description: "Transform your ideas into powerful, precise prompts for AI conversations.",
+    images: ["/rafbug-logo.png"],
+  },
 };
 
 export default function RootLayout({
