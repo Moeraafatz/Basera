@@ -328,97 +328,96 @@ export default function HomePage() {
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl">
+                <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl min-h-[400px] flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                       <Wand2 className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-white font-semibold">Try it now</span>
                   </div>
-                  <textarea
-                    placeholder="Describe your task... (e.g. Write a blog post about AI benefits)"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
-                  />
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                          selectedCategory === cat.id
-                            ? "bg-violet-600 text-white"
-                            : "bg-white/20 text-white hover:bg-white/30"
-                        }`}
+                  <div className="flex-1 flex flex-col">
+                    <textarea
+                      placeholder="Describe your task... (e.g. Write a blog post about AI benefits)"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
+                    />
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setSelectedCategory(cat.id)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                            selectedCategory === cat.id
+                              ? "bg-violet-600 text-white"
+                              : "bg-white/20 text-white hover:bg-white/30"
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs text-gray-300">{input.length}/500</span>
+                      <motion.button
+                        onClick={handleGenerate}
+                        disabled={!input.trim() || isGenerating}
+                        className="bg-gradient-to-r from-violet-600 to-purple-600 text-white h-10 px-5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all disabled:opacity-50"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-300">{input.length}/500</span>
-                    <motion.button
-                      onClick={handleGenerate}
-                      disabled={!input.trim() || isGenerating}
-                      className="bg-gradient-to-r from-violet-600 to-purple-600 text-white h-10 px-5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all disabled:opacity-50"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {isGenerating ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" />Generating...</>
-                      ) : (
-                        <><Wand2 className="h-4 w-4" />Generate</>
-                      )}
-                    </motion.button>
-                  </div>
-                  <AnimatePresence>
-                    {(output || isGenerating) && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, y: -10 }}
-                        animate={{ opacity: 1, height: "auto", y: 0 }}
-                        exit={{ opacity: 0, height: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10">
-                          <span className="text-xs font-medium text-white/80">Generated Prompt</span>
-                          {output && (
-                            <button
-                              onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
-                            >
-                              <Copy className="h-4 w-4" />
-                              Copy
-                            </button>
-                          )}
-                        </div>
-                        <div className="p-4 max-h-[300px] overflow-y-auto">
-                          {isGenerating ? (
-                            <div className="flex items-center justify-center py-8">
-                              <div className="text-center">
-                                <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
-                                <span className="text-sm text-white/60">Generating your prompt...</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
-                          )}
-                        </div>
+                        {isGenerating ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" />Generating...</>
+                        ) : (
+                          <><Wand2 className="h-4 w-4" />Generate</>
+                        )}
+                      </motion.button>
+                    </div>
+                    <div className="flex-1 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden flex flex-col">
+                      <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10 shrink-0">
+                        <span className="text-xs font-medium text-white/80">Generated Prompt</span>
                         {output && (
-                          <div className="px-4 pb-4">
-                            <button
-                              onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                            >
-                              <Copy className="h-4 w-4" />
-                              Copy to Clipboard
-                            </button>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                            Copy
+                          </button>
+                        )}
+                      </div>
+                      <div className="p-4 overflow-y-auto flex-1">
+                        {isGenerating ? (
+                          <div className="flex items-center justify-center h-full min-h-[120px]">
+                            <div className="text-center">
+                              <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
+                              <span className="text-sm text-white/60">Generating your prompt...</span>
+                            </div>
+                          </div>
+                        ) : output ? (
+                          <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                        ) : (
+                          <div className="flex items-center justify-center h-full min-h-[120px]">
+                            <div className="text-center">
+                              <Wand2 className="h-10 w-10 text-white/30 mx-auto mb-2" />
+                              <p className="text-white/50 text-sm">Enter a prompt and click Generate</p>
+                            </div>
                           </div>
                         )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      </div>
+                      {output && (
+                        <div className="px-4 pb-4 shrink-0">
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                          >
+                            <Copy className="h-4 w-4" />
+                            Copy to Clipboard
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -437,79 +436,78 @@ export default function HomePage() {
 
       {/* Quick Try Section - Mobile only */}
       <section className="lg:hidden py-12 px-4 bg-gradient-to-b from-black to-gray-900">
-        <Card className="max-w-md mx-auto p-6 bg-white/10 backdrop-blur-xl border border-white/20">
+        <div className="max-w-md mx-auto p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl min-h-[400px] flex flex-col">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <Wand2 className="h-4 w-4 text-white" />
             </div>
             <span className="text-white font-semibold">Quick Try</span>
           </div>
-          <textarea
-            placeholder="Enter your idea..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="w-full min-h-[100px] rounded-xl bg-white/10 backdrop-blur border border-white/20 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-violet-500 resize-none mb-4"
-          />
-          <motion.button
-            onClick={handleGenerate}
-            disabled={!input.trim() || isGenerating}
-            className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-            whileTap={{ scale: 0.95 }}
-          >
-            {isGenerating ? (
-              <><Loader2 className="h-4 w-4 animate-spin" />Generating...</>
-            ) : (
-              <><Wand2 className="h-4 w-4" />Generate Prompt</>
-            )}
-          </motion.button>
-          <AnimatePresence>
-            {(output || isGenerating) && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: -10 }}
-                animate={{ opacity: 1, height: "auto", y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10">
-                  <span className="text-xs font-medium text-white/80">Generated Prompt</span>
-                  {output && (
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy
-                    </button>
-                  )}
-                </div>
-                <div className="p-4 max-h-[250px] overflow-y-auto">
-                  {isGenerating ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="text-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
-                        <span className="text-sm text-white/60">Generating your prompt...</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
-                  )}
-                </div>
+          <div className="flex-1 flex flex-col">
+            <textarea
+              placeholder="Enter your idea..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="w-full min-h-[80px] rounded-xl bg-white/10 backdrop-blur border border-white/20 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:border-violet-500 resize-none mb-4"
+            />
+            <motion.button
+              onClick={handleGenerate}
+              disabled={!input.trim() || isGenerating}
+              className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50 mb-4"
+              whileTap={{ scale: 0.95 }}
+            >
+              {isGenerating ? (
+                <><Loader2 className="h-4 w-4 animate-spin" />Generating...</>
+              ) : (
+                <><Wand2 className="h-4 w-4" />Generate Prompt</>
+              )}
+            </motion.button>
+            <div className="flex-1 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10 shrink-0">
+                <span className="text-xs font-medium text-white/80">Generated Prompt</span>
                 {output && (
-                  <div className="px-4 pb-4">
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
-                      className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy to Clipboard
-                    </button>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </button>
+                )}
+              </div>
+              <div className="p-4 overflow-y-auto flex-1">
+                {isGenerating ? (
+                  <div className="flex items-center justify-center h-full min-h-[100px]">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto mb-2" />
+                      <span className="text-sm text-white/60">Generating your prompt...</span>
+                    </div>
+                  </div>
+                ) : output ? (
+                  <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                ) : (
+                  <div className="flex items-center justify-center h-full min-h-[100px]">
+                    <div className="text-center">
+                      <Wand2 className="h-10 w-10 text-white/30 mx-auto mb-2" />
+                      <p className="text-white/50 text-sm">Enter a prompt and click Generate</p>
+                    </div>
                   </div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Card>
+              </div>
+              {output && (
+                <div className="px-4 pb-4 shrink-0">
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy to Clipboard
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Tools Grid */}
