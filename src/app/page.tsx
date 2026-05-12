@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Wand2, Sparkles, Image, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Brain, Layers, ChevronDown, Play, Star, Users, Code, TrendingUp } from "lucide-react";
+import { Wand2, Sparkles, Image, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Brain, Layers, ChevronDown, Play, Star, Users, Code, TrendingUp, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -371,12 +371,25 @@ export default function HomePage() {
                   <AnimatePresence>
                     {output && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 p-4 rounded-xl bg-white/20 backdrop-blur border border-white/30"
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden"
                       >
-                        <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                        <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10">
+                          <span className="text-xs font-medium text-white/80">Generated Prompt</span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-xs font-medium transition-colors"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy
+                          </button>
+                        </div>
+                        <div className="p-4 max-h-[300px] overflow-y-auto">
+                          <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -426,11 +439,25 @@ export default function HomePage() {
           <AnimatePresence>
             {output && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-4 p-4 rounded-xl bg-white/10 backdrop-blur border border-white/20"
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 overflow-hidden"
               >
-                <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                <div className="flex items-center justify-between px-4 py-2 bg-white/10 border-b border-white/10">
+                  <span className="text-xs font-medium text-white/80">Generated Prompt</span>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(output); toast.success("Copied to clipboard!"); }}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 hover:text-white text-xs font-medium transition-colors"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </button>
+                </div>
+                <div className="p-4 max-h-[250px] overflow-y-auto">
+                  <pre className="text-sm text-white whitespace-pre-wrap leading-relaxed font-mono">{output}</pre>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

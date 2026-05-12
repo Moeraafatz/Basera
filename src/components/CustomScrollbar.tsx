@@ -104,40 +104,38 @@ export function CustomScrollbar() {
         {/* Track */}
         <div
           ref={trackRef}
-          className="relative w-1.5 h-64 rounded-full bg-white/5"
+          className="relative w-1.5 h-64 rounded-full"
           onClick={handleTrackClick}
+          style={{ background: 'transparent' }}
         >
-          {/* Progress fill */}
+          {/* Thumb - floating, no background fill */}
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-violet-500 via-purple-500 to-pink-500 rounded-full"
-            style={{ height: `${scrollProgress * 100}%` }}
-          />
-          
-          {/* Thumb */}
-          <motion.div
-            className="absolute left-1/2 -translate-x-1/2 w-4 h-16 rounded-full cursor-grab select-none"
-            style={{ top: thumbPosition }}
+            className="absolute left-1/2 -translate-x-1/2 w-3 h-14 rounded-full cursor-grab select-none border border-white/30"
+            style={{ 
+              top: thumbPosition,
+              backgroundColor: 'rgba(139, 92, 246, 0.6)',
+            }}
             onMouseDown={handleMouseDown}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ 
+              scale: 1.15,
+              backgroundColor: 'rgba(139, 92, 246, 0.9)',
+            }}
+            whileTap={{ 
+              scale: 0.9,
+              cursor: 'grabbing',
+            }}
             animate={{
               boxShadow: isDragging 
-                ? "0 0 30px rgba(139, 92, 246, 0.8)" 
-                : "0 0 15px rgba(139, 92, 246, 0.4)",
+                ? "0 0 25px rgba(139, 92, 246, 0.9)" 
+                : "0 0 10px rgba(139, 92, 246, 0.3)",
             }}
           >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 blur-md" />
-            <div className="relative inset-0.5 rounded-full bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400">
-              <div className="absolute inset-x-2 top-2 h-2 rounded-full bg-white/30" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white" />
+            {/* Grip dots inside thumb */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1.5">
+              <div className="w-1 h-1 rounded-full bg-white/80" />
+              <div className="w-1 h-1 rounded-full bg-white/80" />
+              <div className="w-1 h-1 rounded-full bg-white/80" />
             </div>
-            {!isDragging && (
-              <motion.div
-                className="absolute inset-0 rounded-full border border-white/40"
-                animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-            )}
           </motion.div>
         </div>
 

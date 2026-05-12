@@ -1,4 +1,19 @@
-"use client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "AI Prompt Generator — Free Prompt Builder for ChatGPT, Claude & Gemini",
+  description: "Transform ideas into professional AI prompts. Free AI prompt generator for ChatGPT, Claude, Gemini, and more. Simple, advanced, and expert modes.",
+  alternates: {
+    canonical: "https://1-prompteng-ai.vercel.app/ai-prompt-generator",
+  },
+  openGraph: {
+    title: "AI Prompt Generator — Free AI Prompt Builder",
+    description: "Transform ideas into professional AI prompts for ChatGPT, Claude, and Gemini. Free, no registration required.",
+    url: "https://1-prompteng-ai.vercel.app/ai-prompt-generator",
+  },
+};
+
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
@@ -39,7 +54,7 @@ const TIPS = [
   { icon: Cpu, text: "Ask for step-by-step reasoning", color: "text-emerald-600", bg: "bg-emerald-100" },
 ];
 
-function generatePrompt(input: string, level: Level, category: string): string {
+function generatePrompt(input: string, level: Level, category: string, model: string): string {
   if (!input.trim()) return "";
 
   const prefixes: Record<Level, string> = {
@@ -57,7 +72,14 @@ function generatePrompt(input: string, level: Level, category: string): string {
     "Research & Analysis": "Provide comprehensive analysis with data-driven insights and proper citations.",
   };
 
-  return `${prefixes[level]}\n\nTask: ${input}\n\nContext: ${categoryContext[category] || categoryContext["Content Creation"]}`;
+  const modelInstructions: Record<string, string> = {
+    chatgpt: "Optimize for ChatGPT's conversational style and capabilities.",
+    "gpt-4": "Leverage GPT-4's advanced reasoning and broad knowledge.",
+    claude: "Format for Claude's thoughtful, detailed responses.",
+    gemini: "Structure for Gemini's multimodal and fast responses.",
+  };
+
+  return `${prefixes[level]}\n\n${modelInstructions[model] || modelInstructions.chatgpt}\n\nTask: ${input}\n\nContext: ${categoryContext[category] || categoryContext["Content Creation"]}`;
 }
 
 export default function AIPromptGeneratorPage() {
@@ -79,11 +101,11 @@ export default function AIPromptGeneratorPage() {
       setPreviewOutput("");
     } else {
       const timer = setTimeout(() => {
-        setPreviewOutput(generatePrompt(input, level, category));
+        setPreviewOutput(generatePrompt(input, level, category, model));
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [input, level, category]);
+  }, [input, level, category, model]);
 
   const handleCopy = async () => {
     if (!output) return;
@@ -115,10 +137,10 @@ export default function AIPromptGeneratorPage() {
         body: JSON.stringify({ type: "ai-prompt", input, level, category, model }),
       });
       const data = await res.json();
-      setOutput(data.result || generatePrompt(input, level, category));
+      setOutput(data.result || generatePrompt(input, level, category, model));
       toast.success("Prompt generated!");
     } catch {
-      setOutput(generatePrompt(input, level, category));
+      setOutput(generatePrompt(input, level, category, model));
       toast.error("API unavailable — using local generation");
     } finally {
       setIsGenerating(false);
@@ -237,7 +259,7 @@ export default function AIPromptGeneratorPage() {
                       <div>
                         <label className="text-xs font-medium text-gray-600 mb-2 block">Category</label>
                         <Select value={category} onValueChange={setCategory}>
-                          <SelectTrigger className="h-11 bg-gray-100 border-0">
+                          <SelectTrigger className="h-11 bg-gray-100 border-0 text-gray-900">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -253,7 +275,7 @@ export default function AIPromptGeneratorPage() {
                       <div>
                         <label className="text-xs font-medium text-gray-600 mb-2 block">Target Model</label>
                         <Select value={model} onValueChange={setModel}>
-                          <SelectTrigger className="h-11 bg-gray-100 border-0">
+                          <SelectTrigger className="h-11 bg-gray-100 border-0 text-gray-900">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
