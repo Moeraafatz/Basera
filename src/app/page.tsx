@@ -174,6 +174,8 @@ export default function HomePage() {
     setIsGenerating(true);
     setOutput("");
 
+    let result = "";
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -181,9 +183,9 @@ export default function HomePage() {
         body: JSON.stringify({ type: "ai-prompt", input, level: "advanced", category: selectedCategory, model: "claude" }),
       });
       const data = await res.json();
-      setOutput(data.result || "");
-      toast.success("Prompt generated!");
+      result = data.result || "";
     } catch {
+      // Fallback - generate locally
       const parts = input.split(/[\s,]+/).filter(Boolean);
       const topic = parts.slice(0, 6).join(" ");
       
@@ -194,10 +196,12 @@ export default function HomePage() {
         creative: `You are a creative writer and innovative thinker.\n\nCreate creative content about: ${topic}\n\nAdditional Context:\n${input}\n\nExpress ideas with creativity, imagination, unique perspectives, and engaging narrative style.`,
       };
       
-      setOutput(categoryPrompts[selectedCategory] || categoryPrompts.content);
+      result = categoryPrompts[selectedCategory] || categoryPrompts.content;
     }
 
+    setOutput(result);
     setIsGenerating(false);
+    toast.success("Prompt generated!");
   };
 
   return (
