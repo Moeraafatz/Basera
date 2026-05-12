@@ -3,12 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Wand2, Sparkles, Image, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Brain, Layers, ChevronDown, Play, Star, Users, Code, TrendingUp, Copy } from "lucide-react";
+import { Wand2, Sparkles, Image, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Brain, Layers, ChevronDown, Star, Users, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 const HERO_IMAGE = "/hero-image.webp";
+
+const CATEGORIES = [
+  { id: "content", label: "📝 Content" },
+  { id: "business", label: "💼 Business" },
+  { id: "coding", label: "💻 Coding" },
+  { id: "creative", label: "✍️ Creative" },
+] as const;
 
 const TOOLS = [
   {
@@ -101,16 +108,21 @@ const TESTIMONIALS = [
   { name: "Emily Davis", role: "Marketer", text: "Saved me hours of work on content creation.", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" },
 ];
 
+const floatingOrbVariants = {
+  animate: {
+    y: [0, -30, 0],
+    x: [0, 15, 0],
+    scale: [1, 1.1, 1],
+  },
+};
+
 function FloatingOrb({ delay = 0, size = 100, color = "bg-violet-500" }: { delay?: number; size?: number; color?: string }) {
   return (
     <motion.div
       className={`absolute rounded-full blur-3xl opacity-30 ${color}`}
-      style={{ width: size, height: size }}
-      animate={{
-        y: [0, -30, 0],
-        x: [0, 15, 0],
-        scale: [1, 1.1, 1],
-      }}
+      style={{ width: size, height: size, willChange: "transform" }}
+      variants={floatingOrbVariants}
+      animate="animate"
       transition={{
         duration: 8,
         delay,
@@ -127,11 +139,33 @@ function AnimatedCounter({ value, inView }: { value: string; inView: boolean }) 
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (inView && count < numericValue) {
-      const timer = setTimeout(() => setCount(count + 1), 20);
-      return () => clearTimeout(timer);
-    }
-  }, [inView, count, numericValue]);
+    if (!inView) return;
+    
+    let frameId: number;
+    let startTime: number;
+    const duration = 2000;
+    const startCount = 0;
+    
+    const animate = (time: number) => {
+      if (!startTime) startTime = time;
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(startCount + (numericValue - startCount) * eased);
+      
+      setCount(current);
+      
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate);
+      }
+    };
+    
+    frameId = requestAnimationFrame(animate);
+    
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [inView, numericValue]);
 
   return <span>{count}{suffix}</span>;
 }
@@ -141,26 +175,18 @@ export default function HomePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState("");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState("general");
+  const [selectedCategory, setSelectedCategory] = useState("content");
 
-  const categories = [
-    { id: "content", label: "📝 Content" },
-    { id: "business", label: "💼 Business" },
-    { id: "coding", label: "💻 Coding" },
-    { id: "creative", label: "✍️ Creative" },
-  ];
-  
-  const heroRef = useRef(null);
-  const toolsRef = useRef(null);
-  const statsRef = useRef(null);
-  
-  const heroInView = useInView(heroRef, { once: true });
-  const toolsInView = useInView(toolsRef, { once: true });
-  const statsInView = useInView(statsRef, { once: true });
+  const heroRef = useRef<HTMLElement>(null);
+  const toolsRef = useRef<HTMLElement>(null);
+  const statsRef = useRef<HTMLElement>(null);
+
+  const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
+  const toolsInView = useInView(toolsRef, { once: true, margin: "-100px" });
+  const statsInView = useInView(statsRef, { once: true, margin: "-100px" });
 
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.5]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -182,9 +208,20 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "ai-prompt", input, level: "advanced", category: selectedCategory, model: "claude" }),
       });
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
       const data = await res.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
       result = data.result || "";
-    } catch {
+    } catch (err) {
+      console.error("Generation error:", err);
       // Fallback - generate locally
       const parts = input.split(/[\s,]+/).filter(Boolean);
       const topic = parts.slice(0, 6).join(" ");
@@ -197,11 +234,16 @@ export default function HomePage() {
       };
       
       result = categoryPrompts[selectedCategory] || categoryPrompts.content;
+      toast.warning("Using local generation - API unavailable");
     }
 
-    setOutput(result);
+    if (result) {
+      setOutput(result);
+      toast.success("Prompt generated!");
+    } else {
+      toast.error("Failed to generate prompt");
+    }
     setIsGenerating(false);
-    toast.success("Prompt generated!");
   };
 
   return (
@@ -323,10 +365,11 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               {/* Try it card on the right side */}
-              <motion.div 
+              <motion.div
                 className="relative"
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                style={{ willChange: "transform" }}
               >
                 <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-2xl min-h-[400px] flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
@@ -343,7 +386,7 @@ export default function HomePage() {
                       className="w-full min-h-[80px] rounded-xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-sm text-white placeholder:text-gray-300 focus:border-violet-500 resize-none mb-4"
                     />
                     <div className="flex flex-wrap items-center gap-2 mb-4">
-                      {categories.map((cat) => (
+                      {CATEGORIES.map((cat) => (
                         <button
                           key={cat.id}
                           onClick={() => setSelectedCategory(cat.id)}
@@ -732,7 +775,7 @@ export default function HomePage() {
                       className="w-16 h-16 rounded-full mx-auto mb-4 object-cover"
                     />
                     <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-                      "{TESTIMONIALS[currentTestimonial].text}"
+                      &ldquo;{TESTIMONIALS[currentTestimonial].text}&rdquo;
                     </p>
                     <p className="font-bold text-gray-900">{TESTIMONIALS[currentTestimonial].name}</p>
                     <p className="text-sm text-gray-500">{TESTIMONIALS[currentTestimonial].role}</p>
