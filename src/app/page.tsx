@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { Wand2, Sparkles, Image as ImageIcon, Video, Shield, FileText, CheckCircle, ArrowRight, Zap, Loader2, Bot, Star, Users, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,6 @@ export default function HomePage() {
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState("");
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("content");
 
   const heroRef = useRef<HTMLElement>(null);
@@ -45,13 +44,6 @@ export default function HomePage() {
   
   const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
   const toolsInView = useInView(toolsRef, { once: true, margin: "-100px" });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % 3);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
@@ -217,45 +209,6 @@ export default function HomePage() {
                 <div className="text-3xl sm:text-4xl font-bold text-white mb-2">{stat.value}</div>
                 <div className="text-white/80 text-sm">{stat.label}</div>
               </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-8">
-            Loved by <span className="bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">Thousands</span>
-          </h2>
-          
-          <div className="relative h-[200px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTestimonial}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="absolute inset-0"
-              >
-                <Card className="h-full p-8 text-center border-0 shadow-xl">
-                  <p className="text-lg text-gray-700 mb-4">"{["This tool has completely transformed my workflow!", "The best free prompt generator I've found.", "Saved me hours of work on content creation."][currentTestimonial]}"</p>
-                  <p className="font-bold text-gray-900">{["Sarah Chen", "Mike Johnson", "Emily Davis"][currentTestimonial]}</p>
-                  <p className="text-sm text-gray-500">{["Content Creator", "Developer", "Marketer"][currentTestimonial]}</p>
-                </Card>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          <div className="flex justify-center gap-2 mt-6">
-            {[0, 1, 2].map((i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentTestimonial(i)}
-                className={`h-2 rounded-full transition-all ${
-                  i === currentTestimonial ? "w-8 bg-gradient-to-r from-violet-600 to-purple-600" : "w-2 bg-gray-300"
-                }`}
-              />
             ))}
           </div>
         </div>
