@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeReference } from "@/lib/ai-service";
+import { analyzeReference, optimizeTextPrompt } from "@/lib/ai-service";
 
 export async function POST(req: NextRequest) {
   try {
-    const { imageBase64, type, context } = await req.json();
+    const { imageBase64, textInput, promptTemplate, type, context } = await req.json();
 
-    if (!imageBase64) {
-      return NextResponse.json({ error: "No image provided" }, { status: 400 });
+    if (!imageBase64 && !textInput) {
+      return NextResponse.json({ error: "No image or text provided" }, { status: 400 });
+    }
+
+    if (textInput) {
+      const optimizedPrompt = await optimizeTextPrompt(textInput, promptTemplate, type);
+      return NextResponse.json({ optimizedPrompt });
     }
 
     const analysis = await analyzeReference(imageBase64, type, context);
-
     return NextResponse.json({ analysis });
   } catch (error: unknown) {
     console.error("Reference analysis error:", error);

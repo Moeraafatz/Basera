@@ -187,3 +187,40 @@ Be specific. This analysis will be used as reference for generating new design p
     throw err;
   }
 }
+
+export async function optimizeTextPrompt(
+  textInput: string,
+  promptTemplate?: string,
+  category?: string
+): Promise<string> {
+  const instruction = `You are an expert prompt engineer and AI specialist. Your task is to optimize and enhance user prompts to get the best possible output from AI models.
+
+TASK: Transform the user's input into a highly optimized, detailed prompt.
+
+INPUT: "${textInput}"
+${promptTemplate ? `\nPROMPT TEMPLATE: "${promptTemplate}"` : ""}
+${category ? `\nCATEGORY: ${category}` : ""}
+
+INSTRUCTIONS:
+1. Analyze the user's intent and goal
+2. Use the template structure if provided, or create an optimal structure
+3. Add specific details, context, and constraints
+4. Include output format specifications
+5. Add relevant domain knowledge for better results
+6. Make it clear and unambiguous
+
+Return ONLY the optimized prompt, no explanations or markdown.`;
+
+  if (!genAI) {
+    return callWithFallback([{ role: "user", content: instruction }], 1500, 0.5);
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const result = await model.generateContent(instruction);
+    return result.response.text().trim();
+  } catch (err) {
+    console.error("Text optimization error:", err);
+    throw err;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, BookOpen, Code, Briefcase, Mail, FileText, Video, Palette,
@@ -272,6 +272,19 @@ export default function PromptLibraryPage() {
   const [refAnalyzing, setRefAnalyzing] = useState(false);
   const [refAnalysis, setRefAnalysis] = useState<string>("");
   const [dragging, setDragging] = useState(false);
+  const [inputMode, setInputMode] = useState<"image" | "text">("text");
+  const [customTextInput, setCustomTextInput] = useState("");
+  const [optimizedPrompt, setOptimizedPrompt] = useState<string>("");
+
+  useEffect(() => {
+    if (selectedPrompt) {
+      const template = selectedPrompt.prompt;
+      const vars = selectedPrompt.variables.map(v => `[${v}]`).join(", ");
+      setCustomTextInput(vars ? `${template}\n\nVariables to fill: ${vars}` : template);
+      setOptimizedPrompt("");
+      setRefAnalysis("");
+    }
+  }, [selectedPrompt]);
 
   const filtered = useMemo(() => {
     return PROMPTS.filter((p) => {
@@ -297,24 +310,40 @@ export default function PromptLibraryPage() {
   };
 
   const handleRefAnalyze = async () => {
-    if (!refImage) return;
     setRefAnalyzing(true);
     setRefAnalysis("");
-    try {
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve) => {
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.readAsDataURL(refImage);
-      });
+    setOptimizedPrompt("");
 
-      const res = await fetch("/api/analyze-reference", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, type: selectedPrompt?.category, context: selectedPrompt?.title }),
-      });
-      const data = await res.json();
-      setRefAnalysis(data.analysis || "Analysis complete.");
-      toast.success("Reference analyzed!");
+    try {
+      if (inputMode === "image" && refImage) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve((reader.result as string).split(",")[1]);
+          reader.readAsDataURL(refImage);
+        });
+
+        const res = await fetch("/api/analyze-reference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64: base64, type: selectedPrompt?.category, context: selectedPrompt?.title }),
+        });
+        const data = await res.json();
+        setRefAnalysis(data.analysis || "Analysis complete.");
+        toast.success("Reference analyzed!");
+      } else if (inputMode === "text" && customTextInput.trim()) {
+        const res = await fetch("/api/analyze-reference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            textInput: customTextInput, 
+            promptTemplate: selectedPrompt?.prompt,
+            type: selectedPrompt?.category 
+          }),
+        });
+        const data = await res.json();
+        setOptimizedPrompt(data.optimizedPrompt || customTextInput);
+        toast.success("Prompt optimized!");
+      }
     } catch {
       toast.error("Analysis failed. Check API key.");
     } finally {
@@ -344,7 +373,8 @@ export default function PromptLibraryPage() {
     }
   };
 
-  const getMergedPrompt = (prompt: Prompt, analysis: string) => {
+  const getMergedPrompt = (prompt: Prompt, analysis: string, optimized: string = "") => {
+    if (optimized) return optimized;
     if (!analysis) return prompt.prompt;
     return prompt.prompt.replace(
       /\[REFERENCE_ANALYSIS\]/g,
@@ -777,67 +807,132 @@ export default function PromptLibraryPage() {
                 </div>
 
                 <div className="p-6 bg-gradient-to-br from-rose-50/50 to-pink-50/50">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Upload className="h-4 w-4 text-rose-600" />
-                    <span className="text-sm font-semibold text-gray-900">Reference Image (Optional)</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-rose-600" />
+                      <span className="text-sm font-semibold text-gray-900">Customize & Optimize</span>
+                    </div>
+                    <div className="flex bg-white rounded-xl p-1 border border-rose-200">
+                      <button
+                        onClick={() => setInputMode("text")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          inputMode === "text" 
+                            ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white" 
+                            : "text-gray-600 hover:text-rose-600"
+                        }`}
+                      >
+                        Text Input
+                      </button>
+                      <button
+                        onClick={() => setInputMode("image")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          inputMode === "image" 
+                            ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white" 
+                            : "text-gray-600 hover:text-rose-600"
+                        }`}
+                      >
+                        Image
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div
-                      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                      onDragLeave={() => setDragging(false)}
-                      onDrop={handleDrop}
-                      className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all cursor-pointer min-h-[140px] flex-1 ${
-                        dragging ? "border-rose-500 bg-rose-50" : refPreview ? "border-rose-300 bg-white" : "border-gray-300 hover:border-rose-400 hover:bg-rose-50/30"
-                      }`}
-                    >
-                      {refPreview ? (
-                        <div className="relative w-full p-3">
-                          <img src={refPreview} alt="Reference" className="w-full max-h-[120px] object-contain rounded-xl shadow-md" />
+                    {inputMode === "text" ? (
+                      <>
+                        <div className="flex-1">
+                          <textarea
+                            value={customTextInput}
+                            onChange={(e) => setCustomTextInput(e.target.value)}
+                            placeholder="Enter your prompt or use the pre-populated template..."
+                            className="w-full min-h-[140px] rounded-2xl border-2 border-rose-200 bg-white px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 resize-none font-mono"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-3 sm:w-64">
                           <motion.button
-                            onClick={() => { setRefImage(null); setRefPreview(""); setRefAnalysis(""); }}
-                            className="absolute top-1 right-1 p-1.5 rounded-full bg-white text-gray-500 hover:text-rose-600 shadow-md"
-                            whileHover={{ scale: 1.1 }}
+                            onClick={handleRefAnalyze}
+                            disabled={!customTextInput.trim() || refAnalyzing}
+                            className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700 h-11 px-5 rounded-xl text-sm font-semibold shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <X className="h-4 w-4" />
+                            {refAnalyzing ? (
+                              <><Loader2 className="h-4 w-4 animate-spin" />Optimizing...</>
+                            ) : (
+                              <><Wand2 className="h-4 w-4" />Optimize Prompt</>
+                            )}
                           </motion.button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                          <Upload className="h-5 w-5 text-rose-400 mb-2" />
-                          <p className="text-sm text-gray-600 mb-1">Drop image or click to upload</p>
-                          <p className="text-xs text-muted-foreground">JPG, PNG, WEBP</p>
-                          <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="flex flex-col gap-3 sm:w-64">
-                      <motion.button
-                        onClick={handleRefAnalyze}
-                        disabled={!refImage || refAnalyzing}
-                        className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700 h-11 px-5 rounded-xl text-sm font-semibold shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {refAnalyzing ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</>
-                        ) : (
-                          <><Wand2 className="h-4 w-4" />Analyze Reference</>
-                        )}
-                      </motion.button>
-
-                      {refAnalysis && (
-                        <div className="p-3 rounded-xl bg-white border border-rose-200 max-h-[140px] overflow-y-auto shadow-sm">
-                          <p className="text-xs font-semibold text-rose-600 mb-2 flex items-center gap-1">
-                            <Heart className="h-3 w-3" /> Analysis Result
-                          </p>
-                          <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">
-                            {refAnalysis.slice(0, 500)}{refAnalysis.length > 500 ? "..." : ""}
-                          </p>
+                          {optimizedPrompt && (
+                            <div className="p-3 rounded-xl bg-white border border-rose-200 max-h-[140px] overflow-y-auto shadow-sm">
+                              <p className="text-xs font-semibold text-rose-600 mb-2 flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" /> Optimized Result
+                              </p>
+                              <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                {optimizedPrompt.slice(0, 500)}{optimizedPrompt.length > 500 ? "..." : ""}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                          onDragLeave={() => setDragging(false)}
+                          onDrop={handleDrop}
+                          className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all cursor-pointer min-h-[140px] flex-1 ${
+                            dragging ? "border-rose-500 bg-rose-50" : refPreview ? "border-rose-300 bg-white" : "border-gray-300 hover:border-rose-400 hover:bg-rose-50/30"
+                          }`}
+                        >
+                          {refPreview ? (
+                            <div className="relative w-full p-3">
+                              <img src={refPreview} alt="Reference" className="w-full max-h-[120px] object-contain rounded-xl shadow-md" />
+                              <motion.button
+                                onClick={() => { setRefImage(null); setRefPreview(""); setRefAnalysis(""); }}
+                                className="absolute top-1 right-1 p-1.5 rounded-full bg-white text-gray-500 hover:text-rose-600 shadow-md"
+                                whileHover={{ scale: 1.1 }}
+                              >
+                                <X className="h-4 w-4" />
+                              </motion.button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                              <Upload className="h-5 w-5 text-rose-400 mb-2" />
+                              <p className="text-sm text-gray-600 mb-1">Drop image or click to upload</p>
+                              <p className="text-xs text-muted-foreground">JPG, PNG, WEBP</p>
+                              <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-3 sm:w-64">
+                          <motion.button
+                            onClick={handleRefAnalyze}
+                            disabled={!refImage || refAnalyzing}
+                            className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700 h-11 px-5 rounded-xl text-sm font-semibold shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {refAnalyzing ? (
+                              <><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</>
+                            ) : (
+                              <><Wand2 className="h-4 w-4" />Analyze Image</>
+                            )}
+                          </motion.button>
+
+                          {refAnalysis && (
+                            <div className="p-3 rounded-xl bg-white border border-rose-200 max-h-[140px] overflow-y-auto shadow-sm">
+                              <p className="text-xs font-semibold text-rose-600 mb-2 flex items-center gap-1">
+                                <Heart className="h-3 w-3" /> Analysis Result
+                              </p>
+                              <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                {refAnalysis.slice(0, 500)}{refAnalysis.length > 500 ? "..." : ""}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -857,7 +952,7 @@ export default function PromptLibraryPage() {
 
                   <div className="relative">
                     <pre className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-5 max-h-[400px] overflow-y-auto font-mono shadow-inner">
-                      {getMergedPrompt(selectedPrompt, refAnalysis)}
+                      {getMergedPrompt(selectedPrompt, refAnalysis, optimizedPrompt)}
                     </pre>
                     <motion.button
                       onClick={() => {
