@@ -7,7 +7,7 @@ export function CustomScrollbar() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
+  const dragStartRef = useRef({ y: 0, scrollTop: 0 });
 
   const updateProgress = useCallback(() => {
     const scrollTop = window.scrollY;
@@ -32,58 +32,57 @@ export function CustomScrollbar() {
     };
   }, [updateProgress]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
+    dragStartRef.current = {
+      y: e.clientY,
+      scrollTop: window.scrollY,
+    };
   };
 
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!trackRef.current) return;
-      
-      const rect = trackRef.current.getBoundingClientRect();
-      const trackHeight = rect.height;
-      const relativeY = e.clientY - rect.top;
-      
-      const percentage = Math.max(0, Math.min(1, relativeY / trackHeight));
+      const deltaY = e.clientY - dragStartRef.current.y;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      
+      const scrollDelta = (deltaY / scrollHeight) * document.documentElement.scrollHeight;
       window.scrollTo({
-        top: percentage * scrollHeight,
+        top: dragStartRef.current.scrollTop + scrollDelta,
         behavior: "auto",
       });
     };
 
-    const handleMouseUp = () => setIsDragging(false);
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
 
-  useEffect(() => {
-    let idleTimer: NodeJS.Timeout;
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!trackRef.current) return;
     
-    const handleWheel = () => {
-      setIsVisible(true);
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => setIsVisible(true), 2000);
-    };
+    const rect = trackRef.current.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+    const percentage = Math.max(0, Math.min(1, relativeY / rect.height));
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    
+    window.scrollTo({
+      top: percentage * scrollHeight,
+      behavior: "smooth",
+    });
+  };
 
-    window.addEventListener("wheel", handleWheel, { passive: true });
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      clearTimeout(idleTimer);
-    };
-  }, []);
-
-  const trackHeight = typeof window !== "undefined" ? window.innerHeight * 0.6 : 400;
+  const trackHeight = 256;
   const thumbHeight = 64;
   const maxThumbPosition = trackHeight - thumbHeight;
   const thumbPosition = scrollProgress * maxThumbPosition;
@@ -95,65 +94,43 @@ export function CustomScrollbar() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 1 }}
     >
-      {/* Track container */}
       <div className="relative flex items-center gap-3">
         
-        {/* Left glowing line */}
-        <div className="w-px h-64 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/30 to-violet-500/30 rounded-full" />
+        {/* Left line */}
+        <div className="w-px h-64">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/30 to-violet-500/30" />
         </div>
 
-        {/* Main track */}
+        {/* Track */}
         <div
           ref={trackRef}
-          className="relative w-1.5 h-64 rounded-full bg-white/5 cursor-pointer"
-          onClick={(e) => {
-            if (!trackRef.current) return;
-            const rect = trackRef.current.getBoundingClientRect();
-            const relativeY = e.clientY - rect.top;
-            const percentage = relativeY / rect.height;
-            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-            window.scrollTo({
-              top: percentage * scrollHeight,
-              behavior: "smooth",
-            });
-          }}
+          className="relative w-1.5 h-64 rounded-full bg-white/5"
+          onClick={handleTrackClick}
         >
-          {/* Track glow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-violet-500/20 via-purple-500/10 to-pink-500/20 rounded-full" />
-          
           {/* Progress fill */}
           <motion.div
             className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-violet-500 via-purple-500 to-pink-500 rounded-full"
             style={{ height: `${scrollProgress * 100}%` }}
-            animate={{ opacity: isVisible ? 0.8 : 0.3 }}
           />
-
-          {/* Scroll Thumb */}
+          
+          {/* Thumb */}
           <motion.div
-            className="absolute left-1/2 -translate-x-1/2 w-4 h-16 rounded-full cursor-grab active:cursor-grabbing select-none"
+            className="absolute left-1/2 -translate-x-1/2 w-4 h-16 rounded-full cursor-grab select-none"
             style={{ top: thumbPosition }}
             onMouseDown={handleMouseDown}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             animate={{
-              scale: isDragging ? 1.1 : 1,
               boxShadow: isDragging 
                 ? "0 0 30px rgba(139, 92, 246, 0.8)" 
-                : "0 0 20px rgba(139, 92, 246, 0.5)",
+                : "0 0 15px rgba(139, 92, 246, 0.4)",
             }}
           >
-            {/* Outer glow */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 blur-md" />
-            
-            {/* Main body */}
             <div className="relative inset-0.5 rounded-full bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400">
-              {/* Inner highlight */}
               <div className="absolute inset-x-2 top-2 h-2 rounded-full bg-white/30" />
-              
-              {/* Center dot */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white" />
             </div>
-
-            {/* Pulse ring when not dragging */}
             {!isDragging && (
               <motion.div
                 className="absolute inset-0 rounded-full border border-white/40"
@@ -164,12 +141,12 @@ export function CustomScrollbar() {
           </motion.div>
         </div>
 
-        {/* Right glowing line */}
-        <div className="w-px h-64 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-pink-500/30 via-purple-500/30 to-transparent rounded-full" />
+        {/* Right line */}
+        <div className="w-px h-64">
+          <div className="absolute inset-0 bg-gradient-to-b from-pink-500/30 via-purple-500/30 to-transparent" />
         </div>
 
-        {/* Side indicators */}
+        {/* Side dots */}
         <div className="absolute right-8 flex flex-col gap-2">
           {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
             <motion.div
@@ -199,30 +176,16 @@ export function CustomScrollbar() {
   );
 }
 
-// Hide default scrollbar
 export function HideDefaultScrollbar() {
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-      ::-webkit-scrollbar {
-        width: 0px !important;
-        height: 0px !important;
-        display: none !important;
-      }
-      html {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-      body {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        overflow: visible;
-      }
+      ::-webkit-scrollbar { width: 0px !important; height: 0px !important; display: none !important; }
+      html { scrollbar-width: none; -ms-overflow-style: none; }
+      body { scrollbar-width: none; -ms-overflow-style: none; }
     `;
     document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
+    return () => { document.head.removeChild(style); };
   }, []);
   return null;
 }
