@@ -92,7 +92,7 @@ const STATS = [
   { value: "100K+", label: "Prompts Generated", icon: Zap, color: "text-violet-600" },
   { value: "10+", label: "AI Models Supported", icon: Bot, color: "text-purple-600" },
   { value: "100%", label: "Free to Use", icon: Star, color: "text-pink-600" },
-  { value: "24/7", label: "Always Available", icon: Users, color: "text-emerald-600" },
+  { value: "24/7", label: "24/7 Available", icon: Users, color: "text-emerald-600" },
 ];
 
 const TESTIMONIALS = [
