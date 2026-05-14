@@ -34,18 +34,52 @@ const QUALITIES: { value: Quality; label: string }[] = [
 
 const STYLES = ["Photorealistic", "Digital Art", "Illustration", "3D Render", "Oil Painting", "Anime", "Minimalist", "Surreal"];
 
-function generateImagePrompt(input: string, model: Model, style: string): string {
+function generateImagePrompt(input: string, model: Model, style: string, ratio: string, quality: string): string {
   if (!input.trim()) return "";
 
-  const basePrompt = input;
   const modelSpecifics: Record<Model, string> = {
-    "dall-e": "High quality, detailed, well-lit, professional photography style",
-    "midjourney": "Cinematic lighting, dramatic composition, artistic masterpiece",
-    "stable-diffusion": "Masterpiece, best quality, intricate details, sharp focus",
-    flux: "Professional, high detail, perfect composition, stunning visuals",
+    "dall-e": "Hyper-detailed, cinematographic, professional studio quality, perfect composition, 8K resolution, volumetric lighting, subsurface scattering, ray tracing, HDR, masterwork",
+    "midjourney": "Ultra-detailed, cinematic, award-winning photography, f/1.8 bokeh, professional color grading, volumetric god rays, dramatic chiaroscuro lighting, masterpiece, 8K, studio quality",
+    "stable-diffusion": "(masterpiece, best quality, ultra-detailed, 8K, HDR, professional), cinematic lighting, intricate details, hyperrealistic, studio photography, dramatic composition, perfect focus",
+    flux: "Ultra-realistic, photorealistic, professional photography, 8K resolution, cinematic grade, dramatic lighting, perfect composition, shallow depth of field, award-winning quality, masterwork",
   };
 
-  return `${basePrompt}, ${style} style, ${modelSpecifics[model]}, high resolution, beautiful colors, professional composition`;
+  const styleModifiers: Record<string, string> = {
+    "Photorealistic": "Ultra-realistic, photorealistic, natural lighting, no artificial elements, true-to-life colors, HDR, professional photography",
+    "Digital Art": "Digital art, concept art, artstation trending, intricate details, vibrant colors, digital painting, trending on artstation, masterpiece",
+    "Illustration": "Professional illustration, vector art, clean lines, vibrant colors, editorial style, magazine quality, detailed illustration",
+    "3D Render": "3D render, octane render, unreal engine 5, ray tracing, volumetric lighting, 8K, cinematic quality, professional 3D",
+    "Oil Painting": "Classical oil painting, impasto technique, rich textures, masterwork, museum quality, dramatic chiaroscuro, Renaissance style",
+    "Anime": "Anime style, cel shaded, vibrant colors, studio anime quality, key animation frame, detailed background, Japanese animation",
+    "Minimalist": "Minimalist, clean design, simple composition, negative space, modern, elegant, understated beauty, high-end design",
+    "Surreal": "Surreal, dreamlike, hyper-detailed, surrealist art, Salvador Dali inspired, otherworldly, photorealistic, strange beauty",
+  };
+
+  const ratioGuide: Record<string, string> = {
+    "1:1": "square composition, centered subject, balanced framing",
+    "16:9": "wide cinematic framing, landscape, epic scale, film quality",
+    "9:16": "vertical portrait framing, portrait photography, mobile-friendly",
+    "4:3": "classic 4:3 aspect ratio, editorial style, traditional composition",
+    "3:4": "portrait orientation, tall frame, full-body composition",
+  };
+
+  const qualityMarkers: Record<string, string> = {
+    standard: "high quality, well-composed, professional",
+    hd: "ultra-detailed, high resolution, 4K quality, sharp focus, professional",
+    ultra: "8K resolution, hyper-detailed, masterpiece, award-winning, cinematic quality, ray tracing, volumetric lighting",
+  };
+
+  return `Create a stunning AI image of: ${input}
+
+STYLE: ${styleModifiers[style] || styleModifiers["Photorealistic"]}
+
+MODEL GUIDANCE: ${modelSpecifics[model]}
+
+TECHNICAL: ${qualityMarkers[quality]}, ${ratioGuide[ratio] || ratioGuide["1:1"]}
+
+COMPOSITION: Dynamic subject placement, professional lighting setup, atmospheric depth, masterful color harmony, perfect balance between subject and environment.
+
+MOOD: Evocative, professional, visually striking, gallery-worthy quality.`;
 }
 
 export default function ImagePromptPage() {
@@ -80,10 +114,10 @@ export default function ImagePromptPage() {
         body: JSON.stringify({ type: "image-prompt", input, model, style, ratio, quality }),
       });
       const data = await res.json();
-      setOutput(data.result || generateImagePrompt(input, model, style));
+      setOutput(data.result || generateImagePrompt(input, model, style, ratio, quality));
       toast.success("Prompt generated!");
     } catch {
-      setOutput(generateImagePrompt(input, model, style));
+      setOutput(generateImagePrompt(input, model, style, ratio, quality));
       toast.error("API unavailable — using local generation");
     } finally {
       setIsGenerating(false);

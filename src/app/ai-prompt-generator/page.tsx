@@ -28,21 +28,75 @@ function generatePrompt(input: string, level: Level, category: string): string {
   if (!input.trim()) return "";
 
   const prefixes: Record<Level, string> = {
-    simple: "You are a helpful AI assistant. Provide clear, concise responses.",
-    advanced: "You are an expert AI assistant with deep domain knowledge. Provide detailed, well-structured responses with examples.",
-    expert: "You are a world-class expert. Deliver an exceptionally detailed response with deep analysis, best practices, and actionable recommendations.",
+    simple: "You are a helpful AI assistant. Your goal is to provide clear, concise, and practical responses.",
+    advanced: "You are a highly skilled AI expert with deep domain knowledge. Your role is to deliver well-structured, detailed, and actionable responses that demonstrate expertise.",
+    expert: "You are a world-class specialist and thought leader. Your mission is to produce exceptional, production-grade outputs that reflect deep expertise, rigorous analysis, and proven best practices.",
   };
 
   const categoryContext: Record<string, string> = {
-    "Content Creation": "Focus on creating engaging, well-structured content.",
-    "Business & Marketing": "Provide actionable strategies with measurable outcomes.",
-    "Coding & Tech": "Include code examples and best practices.",
-    "Creative Writing": "Bring creativity and vivid descriptions.",
-    "Education & Learning": "Explain concepts clearly with analogies.",
-    "Research & Analysis": "Provide comprehensive analysis with insights.",
+    "Content Creation": "Create content that is engaging, well-structured, and optimized for the target audience. Use clear headings, compelling narratives, and persuasive language. Ensure the content is scannable, shareable, and drives the desired action.",
+    "Business & Marketing": "Develop strategic, data-informed approaches with clear value propositions. Focus on measurable outcomes, market positioning, competitive advantages, and conversion optimization. Include actionable tactics with timelines.",
+    "Coding & Tech": "Write clean, maintainable, and well-documented code. Provide detailed implementation guidance including architecture decisions, error handling, edge cases, testing strategies, and deployment considerations. Include code examples where helpful.",
+    "Creative Writing": "Craft vivid, emotionally engaging content with strong narrative voice. Use descriptive language, compelling metaphors, and authentic tone. Balance creativity with purpose — every element should serve the story or message.",
+    "Education & Learning": "Explain complex concepts using clear language, relatable analogies, and structured progression from fundamentals to advanced topics. Include memory hooks, practical applications, and knowledge checks to reinforce learning.",
+    "Research & Analysis": "Conduct thorough, evidence-based analysis with logical structure. Present findings with supporting data, alternative perspectives, and actionable conclusions. Include methodology transparency and acknowledge limitations.",
   };
 
-  return `${prefixes[level]}\n\nTask: ${input}\n\nContext: ${categoryContext[category] || categoryContext["Content Creation"]}`;
+  const levelDetail: Record<Level, string> = {
+    simple: `TASK: ${input}
+
+Format your response as follows:
+1. Brief introduction (1-2 sentences)
+2. Core answer (concise and practical)
+3. Key takeaway (actionable next step)
+
+Keep responses under 200 words. Prioritize clarity and immediacy.`,
+    advanced: `TASK: ${input}
+
+Provide a comprehensive response that includes:
+- Clear explanation of the approach
+- Step-by-step breakdown with reasoning
+- Practical examples or demonstrations
+- Key considerations and potential pitfalls
+- Summary of best practices and recommendations
+
+Structure output with clear sections. Use bullet points and numbering where appropriate. Aim for depth without unnecessary elaboration.`,
+    expert: `ROLE: Senior specialist with proven expertise in this domain.
+
+TASK: ${input}
+
+REQUIREMENTS:
+- Deliver an exceptionally detailed and comprehensive response
+- Include multi-angle analysis with supporting evidence and rationale
+- Provide step-by-step methodology with implementation guidance
+- Address edge cases, failure modes, and mitigation strategies
+- Include real-world examples, case studies, or reference implementations
+- Define clear quality criteria and success metrics
+- Recommend follow-up actions and deeper exploration paths
+
+OUTPUT FORMAT:
+## Overview
+[Concise executive summary of approach]
+
+## Detailed Analysis
+[In-depth exploration with rationale]
+
+## Implementation Guide
+[Actionable steps with priorities]
+
+## Best Practices
+[Top 5-7 recommendations with explanations]
+
+## Quality Checklist
+[Criteria for evaluating success]
+
+## Further Considerations
+[Related topics, advanced concepts, common pitfalls]
+
+Ensure every section delivers actionable value. Leave no ambiguity.`,
+  };
+
+  return `${prefixes[level]}\n\n${categoryContext[category] || categoryContext["Content Creation"]}\n\n${levelDetail[level]}`;
 }
 
 export default function AIPromptGeneratorPage() {

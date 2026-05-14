@@ -32,48 +32,90 @@ export default function AIHumanizerPage() {
   };
 
   const humanizeLocally = (text: string, intensity: string): string => {
-    const variations = {
-      subtle: [
-        /very/g, /really/g, /basically/g, /actually/g,
-        /I think/g, /in my opinion/g, /obviously/g, /certainly/g,
-      ],
-      moderate: [
-        /AI-generated/g, /machine learning/g, /algorithm/g, /automated/g,
-        /synthetic/g, /computer-generated/g,
-      ],
-      aggressive: [],
-    };
+    if (!text.trim()) return "";
+
+    const fillerPhrases = [
+      "In my experience,",
+      "From what I've seen,",
+      "Based on real-world observations,",
+      "Honestly,",
+      "To be straightforward,",
+      "Here's the thing:",
+      "The practical reality is,",
+      "When you get down to it,",
+    ];
+
+    const aiIndicators: [RegExp, string][] = [
+      [/As an AI,/gi, "In my experience,"],
+      [/As a language model,/gi, "From what I know,"],
+      [/I am an AI/gi, "I am someone who"],
+      [/artificial intelligence/gi, "human expertise"],
+      [/machine learning/gi, "proven methods"],
+      [/algorithm/gi, "professional approach"],
+      [/automated/gi, "carefully crafted"],
+      [/synthetic/gi, "authentic"],
+      [/computer-generated/gi, "professionally written"],
+      [/However,/g, "But"],
+      [/Furthermore,/g, "Also"],
+      [/Additionally,/g, "On top of that"],
+      [/In conclusion,/g, "The bottom line is,"],
+      [/It's important to note/g, "The key point is"],
+      [/To summarize,/g, "The main takeaway is"],
+      [/In other words,/g, "Put simply,"],
+      [/Specifically,/g, "More precisely,"],
+      [/Essentially,/g, "At its core,"],
+      [/Nevertheless,/g, "Still,"],
+      [/Nonetheless,/g, "Even so,"],
+      [/Consequently,/g, "So"],
+      [/As a result,/g, "This means"],
+      [/Hence,/g, "Therefore,"],
+      [/Thus,/g, "So"],
+      [/\bvery\b/gi, ""],
+      [/\breally\b/gi, ""],
+      [/\bbasically\b/gi, ""],
+      [/\bactually\b/gi, ""],
+      [/\bobviously\b/gi, ""],
+      [/\bcertainly\b/gi, ""],
+      [/\bdefinitely\b/gi, ""],
+      [/\babsolutely\b/gi, ""],
+    ];
 
     let result = text;
-    
+
+    aiIndicators.forEach(([pattern, replacement]) => {
+      result = result.replace(pattern, replacement);
+    });
+
     if (intensity === "subtle") {
-      result = result
-        .replace(/\b(very|really)\b/gi, "")
-        .replace(/\bbasically\b/gi, "")
-        .replace(/,\s*,/g, ",")
-        .replace(/\s+/g, " ");
-    } else if (intensity === "moderate") {
-      result = result
-        .replace(/However,/g, "But,")
-        .replace(/Furthermore,/g, "Also,")
-        .replace(/Consequently,/g, "So,")
-        .replace(/\bAdditionally\b/g, "Also")
-        .replace(/In conclusion,/g, "Finally,");
+      result = result.replace(/,\s*,/g, ",").replace(/\s+/g, " ").trim();
     }
 
-    const humanPhrases = [
-      "From my experience,",
-      "Based on what I've seen,",
-      "I've found that,",
-      "It seems like,",
-      "From a practical standpoint,",
-    ];
-    
-    if (Math.random() > 0.5 && !result.includes(humanPhrases[0])) {
-      result = humanPhrases[Math.floor(Math.random() * humanPhrases.length)] + " " + result;
+    if (Math.random() > 0.3) {
+      const phrase = fillerPhrases[Math.floor(Math.random() * fillerPhrases.length)];
+      if (!result.startsWith(phrase) && !result.includes(phrase)) {
+        const insertPos = result.search(/[.!?]/);
+        if (insertPos > 20 && insertPos < result.length / 2) {
+          result = result.slice(0, insertPos + 1) + " " + phrase + result.slice(insertPos + 1);
+        } else {
+          result = phrase + " " + result.charAt(0).toLowerCase() + result.slice(1);
+        }
+      }
     }
 
-    return result.trim();
+    const sentenceEndings = result.match(/[.!?]+\s*/g) || [];
+    if (sentenceEndings.length < 2 && result.length > 50) {
+      const lastPunct = result.match(/[.!?]$/);
+      if (!lastPunct) {
+        result = result.trim() + ".";
+      }
+    }
+
+    return result
+      .replace(/,\s*,/g, ",")
+      .replace(/\s+/g, " ")
+      .replace(/\.\s*\./g, ".")
+      .replace(/\s+([.,!?])/g, "$1")
+      .trim();
   };
 
   const handleGenerate = async () => {

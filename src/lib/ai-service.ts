@@ -70,20 +70,76 @@ export async function generateAIPrompt(params: {
 
   if (!input.trim()) return "";
 
-  const levelInstructions = {
-    simple: "You are a helpful AI assistant. Rewrite the following prompt to be clear, concise, and effective. Output ONLY the improved prompt with no preamble.",
-    advanced: "You are an expert prompt engineer. Enhance this prompt by adding context, structure, clear instructions, and formatting guidance. Make it detailed but not overly complex. Output ONLY the improved prompt.",
-    expert: "You are a world-class prompt engineer. Create an exceptional, production-grade prompt. Include role definition, clear objectives, constraints, output format specifications, examples, quality criteria, and step-by-step reasoning requirements. Output ONLY the improved prompt.",
+  const prefixes: Record<string, string> = {
+    simple: "You are a helpful AI assistant. Your goal is to provide clear, concise, and practical responses that solve the user's problem efficiently.",
+    advanced: "You are a highly skilled AI expert with deep domain knowledge. Your role is to deliver well-structured, detailed, and actionable responses that demonstrate genuine expertise.",
+    expert: "You are a world-class specialist and thought leader. Your mission is to produce exceptional, production-grade outputs that reflect deep expertise, rigorous analysis, and proven best practices.",
   };
 
-  const modelNames: Record<string, string> = {
-    chatgpt: "ChatGPT (GPT-4o)",
-    "gpt-4o": "GPT-4o",
-    claude: "Claude",
-    gemini: "Gemini",
+  const categoryContext: Record<string, string> = {
+    "Content Creation": "Create content that is engaging, well-structured, and optimized for the target audience. Use clear headings, compelling narratives, and persuasive language. Ensure the content is scannable, shareable, and drives the desired action.",
+    "Business & Marketing": "Develop strategic, data-informed approaches with clear value propositions. Focus on measurable outcomes, market positioning, competitive advantages, and conversion optimization. Include actionable tactics with timelines.",
+    "Coding & Tech": "Write clean, maintainable, and well-documented code. Provide detailed implementation guidance including architecture decisions, error handling, edge cases, testing strategies, and deployment considerations. Include code examples where helpful.",
+    "Creative Writing": "Craft vivid, emotionally engaging content with strong narrative voice. Use descriptive language, compelling metaphors, and authentic tone. Balance creativity with purpose — every element should serve the story or message.",
+    "Education & Learning": "Explain complex concepts using clear language, relatable analogies, and structured progression from fundamentals to advanced topics. Include memory hooks, practical applications, and knowledge checks to reinforce learning.",
+    "Research & Analysis": "Conduct thorough, evidence-based analysis with logical structure. Present findings with supporting data, alternative perspectives, and actionable conclusions. Include methodology transparency and acknowledge limitations.",
   };
 
-  const systemPrompt = `${levelInstructions[level]}\n\nTarget AI model: ${modelNames[params.model] || params.model}\nCategory: ${category}`;
+  const levelDetail: Record<string, string> = {
+    simple: `TASK: ${input}
+
+Format your response as follows:
+1. Brief introduction (1-2 sentences)
+2. Core answer (concise and practical)
+3. Key takeaway (actionable next step)
+
+Keep responses under 200 words. Prioritize clarity and immediacy.`,
+    advanced: `TASK: ${input}
+
+Provide a comprehensive response that includes:
+- Clear explanation of the approach
+- Step-by-step breakdown with reasoning
+- Practical examples or demonstrations
+- Key considerations and potential pitfalls
+- Summary of best practices and recommendations
+
+Structure output with clear sections. Use bullet points and numbering where appropriate. Aim for depth without unnecessary elaboration.`,
+    expert: `ROLE: Senior specialist with proven expertise in this domain.
+
+TASK: ${input}
+
+REQUIREMENTS:
+- Deliver an exceptionally detailed and comprehensive response
+- Include multi-angle analysis with supporting evidence and rationale
+- Provide step-by-step methodology with implementation guidance
+- Address edge cases, failure modes, and mitigation strategies
+- Include real-world examples, case studies, or reference implementations
+- Define clear quality criteria and success metrics
+- Recommend follow-up actions and deeper exploration paths
+
+OUTPUT FORMAT:
+## Overview
+[Concise executive summary of approach]
+
+## Detailed Analysis
+[In-depth exploration with rationale]
+
+## Implementation Guide
+[Actionable steps with priorities]
+
+## Best Practices
+[Top 5-7 recommendations with explanations]
+
+## Quality Checklist
+[Criteria for evaluating success]
+
+## Further Considerations
+[Related topics, advanced concepts, common pitfalls]
+
+Ensure every section delivers actionable value. Leave no ambiguity.`,
+  };
+
+  const systemPrompt = `${prefixes[level] || prefixes.advanced}\n\n${categoryContext[category] || categoryContext["Content Creation"]}\n\n${levelDetail[level] || levelDetail.advanced}`;
 
   return callWithFallback(
     [
@@ -102,15 +158,67 @@ export async function generateImagePrompt(params: {
   ratio: string;
   quality: string;
 }): Promise<string> {
-  const { input, model, style, quality } = params;
+  const { input, model, style: _style, quality: _quality } = params;
 
   if (!input.trim()) return "";
 
   const modelInstructions: Record<string, string> = {
-    "dall-e": `You are an expert image prompt engineer. Generate a detailed, professional DALL-E 3 prompt for: "${input}"\n\nStyle: ${style}\nQuality: ${quality}\n\nInclude: subject description, lighting, composition, camera angle, color palette, art style, mood, and technical quality markers.\n\nFormat the prompt as a flowing natural language description suitable for DALL-E 3.`,
-    midjourney: `You are a Midjourney prompt expert. Create a cinematic Midjourney prompt for: "${input}"\n\nStyle: ${style}\n\nInclude artistic direction, lighting atmosphere, composition guidelines, style references, and end with appropriate Midjourney parameters (--ar, --s, --q, --style).`,
-    "stable-diffusion": `You are a Stable Diffusion XL prompt engineer. Create a detailed SDXL prompt for: "${input}"\n\nStyle: ${style}\n\nInclude: (masterpiece, best quality), subject details, environment, lighting, camera angle, art style, technical quality boosters, and negative prompt suggestions.`,
-    flux: `You are a FLUX Pro prompt engineer. Create a detailed prompt optimized for FLUX Pro/Seedream: "${input}"\n\nStyle: ${style}\n\nFocus on: subject, environment, lighting, mood, style references, and technical quality markers. Be precise and descriptive.`,
+    "dall-e": `You are an expert image prompt engineer. Create an ultra-detailed, cinematic DALL-E 3 prompt for: "${input}"
+
+STYLE: ${params.style || "Photorealistic"}
+
+QUALITY: ${params.quality || "hd"}
+
+REQUIREMENTS:
+- Describe the subject with rich, specific detail (appearance, posture, expression, setting)
+- Specify lighting quality and direction (e.g., golden hour, volumetric, rim lighting)
+- Define composition and camera perspective (e.g., low angle, wide shot, rule of thirds)
+- State the artistic style and color palette
+- Include atmosphere, mood, and emotional tone
+- Add technical quality markers (resolution, clarity, depth)
+
+Format as flowing, vivid natural language — no bullet points, no lists. The prompt should read like a compelling art direction brief for a professional cinematographer and set designer working together.`,
+    midjourney: `You are an expert Midjourney prompt engineer. Create a cinematic, professional Midjourney prompt for: "${input}"
+
+STYLE: ${params.style || "Photorealistic"}
+
+REQUIREMENTS:
+- Subject: detailed description of the main subject with specific characteristics
+- Environment: setting, background elements, atmospheric details
+- Lighting: specific quality (golden hour, volumetric, dramatic rim light, etc.)
+- Composition: camera angle, depth of field, framing
+- Style references: artistic influences and visual references
+- Mood and atmosphere: emotional tone and visual feeling
+- End with high-impact Midjourney parameters: --ar ${params.ratio || "1:1"} --style raw --s 750 --q 2 --v 6.1
+
+Create a prompt that reads like a cinematic shot list from a professional film production.`,
+    "stable-diffusion": `You are an expert Stable Diffusion XL prompt engineer. Create a detailed, high-quality SDXL prompt for: "${input}"
+
+STYLE: ${params.style || "Photorealistic"}
+
+REQUIREMENTS:
+- Subject focus: detailed, specific subject description with distinguishing features
+- Environment details: setting, props, background elements
+- Lighting setup: type, direction, quality
+- Camera/angle: perspective, depth of field, composition
+- Quality boosters: (masterpiece, best quality, ultra-detailed, 8K, HDR)
+- Artistic style: specific style descriptors
+- Negative prompt: common issues to avoid
+
+Structure: positive prompt first, then quality markers, then style. Make each element distinct and powerful.`,
+    flux: `You are an expert FLUX Pro prompt engineer. Create a professional prompt optimized for FLUX Pro/Seedream for: "${input}"
+
+STYLE: ${params.style || "Photorealistic"}
+
+REQUIREMENTS:
+- Primary subject: highly detailed description with specific attributes
+- Scene environment: setting, atmosphere, contextual elements
+- Lighting design: specific light quality, direction, and color temperature
+- Visual composition: camera perspective, depth, framing
+- Style precision: exact artistic direction and reference points
+- Technical quality: 8K, photorealistic, cinematic grade, sharp detail
+
+Write as a professional art direction brief. Be extremely specific and descriptive — every detail shapes the final output.`,
   };
 
   const instruction = modelInstructions[model] || modelInstructions["dall-e"];
@@ -133,11 +241,51 @@ export async function generateVideoPrompt(params: {
 
   if (!input.trim()) return "";
 
+  const dimensionSpecs: Record<string, string> = {
+    "16:9": "Wide cinematic landscape, dramatic environmental shots, sweeping establishing views, epic scale",
+    "9:16": "Vertical portrait format, intimate close-ups, emotional depth, focused single-subject framing",
+    "1:1": "Square format, balanced composition, versatile framing, social-media optimized",
+    "4:3": "Classic television aspect, traditional cinematography, grounded framing, documentary style",
+  };
+
+  const durationSpecs: Record<string, string> = {
+    "5": "Condensed, impactful, high-energy sequence",
+    "10": "Balanced pacing, natural flow, cinematic rhythm",
+    "15": "Extended narrative, rich visual storytelling, immersive journey",
+  };
+
   return callWithFallback(
     [
       {
         role: "system",
-        content: `You are an expert video prompt engineer for VEO3 and Sora. Create a professional video generation prompt.\n\nVideo Dimension: ${dimension}\n\nFormat: [Subject & Action] → [Visual Direction] → [Technical Specifications] → [Cinematic Quality]\n\nBe specific about: subject movement, camera motion, lighting, atmosphere, duration (8-10s), quality markers.`,
+        content: `You are an expert video prompt engineer for VEO3 and Sora. Create a professional, cinematic video generation prompt.
+
+## SCENE DESCRIPTION
+${input}
+
+## TECHNICAL SPECIFICATIONS
+- Duration: ${dimension} seconds
+- Aspect Ratio: ${dimension}
+- Framing: ${dimensionSpecs[dimension] || dimensionSpecs["16:9"]}
+- Pacing: ${durationSpecs[dimension] || durationSpecs["10"]}
+
+## CAMERA & PRODUCTION
+- Camera Movement: Dynamic and purposeful — use dolly, crane, or stabilized tracking for smooth cinematic motion
+- Shot Type: Mix of establishing wide shots and intimate close-ups for visual variety
+- Focus: Rack focus transitions between subject planes for depth
+- Depth of Field: Shallow with cinematic bokeh where appropriate
+
+## LIGHTING & ATMOSPHERE
+- Primary Lighting: Natural golden hour with volumetric light rays
+- Secondary: Rim lighting for subject separation
+- Atmosphere: Evocative mood with atmospheric depth (fog, haze, or particles)
+- Color Grade: Cinematic with rich contrast and balanced color temperature
+
+## VISUAL QUALITY
+- Quality: Ultra-cinematic, 4K+ resolution, film grain texture
+- Composition: Rule of thirds, dynamic leading lines, balanced negative space
+- Effects: Subtle lens flares, natural light scatter, professional post-processing
+- Motion: Smooth 24fps or 30fps with natural easing`,
       },
       { role: "user", content: input },
     ],

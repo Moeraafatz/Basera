@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Menu, X, Zap, Wand2, Image, Video, Shield, BookOpen } from "lucide-react";
+import { Sparkles, Menu, X, Zap, Wand2, Image, Video, Shield, BookOpen, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", icon: Zap },
+  { href: "/foundation", label: "Foundation", icon: FileCode },
   { href: "/ai-prompt-generator", label: "AI Prompt", icon: Sparkles },
   { href: "/prompt-library", label: "Library", icon: BookOpen },
   { href: "/image-prompt", label: "Image", icon: Image },

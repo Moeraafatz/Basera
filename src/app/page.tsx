@@ -11,6 +11,8 @@ import { toast } from "sonner";
 
 const HERO_IMAGE = "/hero-image.webp";
 
+type Level = "simple" | "advanced" | "expert";
+
 const CATEGORIES = [
   { id: "content", label: "Content" },
   { id: "business", label: "Business" },
@@ -26,6 +28,87 @@ const TOOLS = [
   { href: "/ai-humanizer", icon: Shield, name: "AI Humanizer", desc: "Make AI text sound human", badge: "Free", gradient: "from-cyan-500 to-blue-600" },
   { href: "/image-to-prompt", icon: FileText, name: "Image to Prompt", desc: "Convert images to prompts", badge: "Popular", gradient: "from-indigo-500 to-violet-600" },
 ];
+
+function generatePrompt(input: string, level: Level, category: string): string {
+  if (!input.trim()) return "";
+
+  const categoryMap: Record<string, string> = {
+    content: "Content Creation",
+    business: "Business & Marketing",
+    coding: "Coding & Tech",
+    creative: "Creative Writing",
+  };
+
+  const fullCategory = categoryMap[category] || "Content Creation";
+
+  const prefixes: Record<Level, string> = {
+    simple: "You are a helpful AI assistant. Your goal is to provide clear, concise, and practical responses.",
+    advanced: "You are a highly skilled AI expert with deep domain knowledge. Your role is to deliver well-structured, detailed, and actionable responses that demonstrate expertise.",
+    expert: "You are a world-class specialist and thought leader. Your mission is to produce exceptional, production-grade outputs that reflect deep expertise, rigorous analysis, and proven best practices.",
+  };
+
+  const categoryContext: Record<string, string> = {
+    content: "Create content that is engaging, well-structured, and optimized for the target audience. Use clear headings, compelling narratives, and persuasive language.",
+    business: "Develop strategic, data-informed approaches with clear value propositions. Focus on measurable outcomes, market positioning, and conversion optimization.",
+    coding: "Write clean, maintainable, and well-documented code. Provide implementation guidance including architecture, error handling, and testing strategies.",
+    creative: "Craft vivid, emotionally engaging content with strong narrative voice. Use descriptive language, compelling metaphors, and authentic tone.",
+  };
+
+  const levelDetail: Record<Level, string> = {
+    simple: `TASK: ${input}
+
+Format your response as follows:
+1. Brief introduction (1-2 sentences)
+2. Core answer (concise and practical)
+3. Key takeaway (actionable next step)
+
+Keep responses under 200 words. Prioritize clarity and immediacy.`,
+    advanced: `TASK: ${input}
+
+Provide a comprehensive response that includes:
+- Clear explanation of the approach
+- Step-by-step breakdown with reasoning
+- Practical examples or demonstrations
+- Key considerations and potential pitfalls
+- Summary of best practices
+
+Structure output with clear sections. Use bullet points where appropriate.`,
+    expert: `ROLE: Senior specialist with proven expertise in this domain.
+
+TASK: ${input}
+
+REQUIREMENTS:
+- Deliver an exceptionally detailed and comprehensive response
+- Include multi-angle analysis with supporting evidence
+- Provide step-by-step methodology with implementation guidance
+- Address edge cases, failure modes, and mitigation strategies
+- Include real-world examples and case studies
+- Define clear quality criteria and success metrics
+
+OUTPUT FORMAT:
+## Overview
+[Concise executive summary of approach]
+
+## Detailed Analysis
+[In-depth exploration with rationale]
+
+## Implementation Guide
+[Actionable steps with priorities]
+
+## Best Practices
+[Top recommendations with explanations]
+
+## Quality Checklist
+[Criteria for evaluating success]
+
+## Further Considerations
+[Related topics, common pitfalls]
+
+Ensure every section delivers actionable value. Leave no ambiguity.`,
+  };
+
+  return `${prefixes[level]}\n\n${categoryContext[category] || categoryContext.content}\n\n${levelDetail[level]}`;
+}
 
 const STATS = [
   { value: "100K+", label: "Prompts Generated" },
@@ -60,20 +143,13 @@ export default function HomePage() {
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setOutput(data.result || "");
+      setOutput(data.result || generatePrompt(input, "advanced", selectedCategory));
     } catch {
-      const parts = input.split(/[\s,]+/).filter(Boolean).slice(0, 6).join(" ");
-      const fallback: Record<string, string> = {
-        content: `You are an expert content writer. Create content about: ${parts}`,
-        business: `You are a business analyst. Create a business document about: ${parts}`,
-        coding: `You are a software developer. Create code about: ${parts}`,
-        creative: `You are a creative writer. Create about: ${parts}`,
-      };
-      setOutput(fallback[selectedCategory] || fallback.content);
+      setOutput(generatePrompt(input, "advanced", selectedCategory));
+    } finally {
+      setIsGenerating(false);
     }
-
-    setIsGenerating(false);
-    if (output || !isGenerating) toast.success("Prompt generated!");
+    toast.success("Prompt generated!");
   };
 
   return (

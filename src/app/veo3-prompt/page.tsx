@@ -23,14 +23,53 @@ const DURATIONS = [
 function generateVideoPrompt(input: string, dimension: string, duration: string): string {
   if (!input.trim()) return "";
 
-  return `Create a ${duration}-second ${dimension} video: ${input}
+  const dimensionSpecs: Record<string, string> = {
+    "16:9": "Wide cinematic landscape, dramatic environmental shots, sweeping establishing views, epic scale",
+    "9:16": "Vertical portrait format, intimate close-ups, emotional depth, focused single-subject framing",
+    "1:1": "Square format, balanced composition, versatile framing, social-media optimized",
+    "4:3": "Classic television aspect, traditional cinematography, grounded framing, documentary style",
+  };
 
-Requirements:
-- Clear subject and action
-- Smooth camera movement
-- Professional lighting
-- Cinematic quality
-- No audio needed (add separately)`;
+  const durationSpecs: Record<string, string> = {
+    "5": "Condensed, impactful, high-energy sequence",
+    "10": "Balanced pacing, natural flow, cinematic rhythm",
+    "15": "Extended narrative, rich visual storytelling, immersive journey",
+  };
+
+  return `PROFESSIONAL VIDEO PROMPT — VEO3 / SORA
+
+## SCENE DESCRIPTION
+${input}
+
+## TECHNICAL SPECIFICATIONS
+- Duration: ${duration} seconds
+- Aspect Ratio: ${dimension}
+- Framing: ${dimensionSpecs[dimension] || dimensionSpecs["16:9"]}
+- Pacing: ${durationSpecs[duration] || durationSpecs["10"]}
+
+## CAMERA & PRODUCTION
+- Camera Movement: Dynamic and purposeful — use dolly, crane, or stabilized tracking for smooth cinematic motion
+- Shot Type: Mix of establishing wide shots and intimate close-ups for visual variety
+- Focus: Rack focus transitions between subject planes for depth
+- Depth of Field: Shallow with cinematic bokeh where appropriate
+
+## LIGHTING & ATMOSPHERE
+- Primary Lighting: Natural golden hour with volumetric light rays
+- Secondary: Rim lighting for subject separation
+- Atmosphere: Evocative mood with atmospheric depth (fog, haze, or particles)
+- Color Grade: Cinematic with rich contrast and balanced color temperature
+
+## VISUAL QUALITY
+- Quality: Ultra-cinematic, 4K+ resolution, film grain texture
+- Composition: Rule of thirds, dynamic leading lines, balanced negative space
+- Effects: Subtle lens flares, natural light scatter, professional post-processing
+- Motion: Smooth 24fps or 30fps with natural easing
+
+## AUDIO (OPTIONAL)
+- Ambient soundscape matching the scene's mood
+- Dynamic range from subtle to impactful
+
+Generate this as a professional production brief for an AI video generation model.`;
 }
 
 export default function VEO3PromptPage() {

@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:foundation": "node scripts/verify-foundation.mjs",
+    "verify": "npm run lint && node scripts/verify-foundation.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
