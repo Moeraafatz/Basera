@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLang, i18nStore } from "@/lib/i18n";
+import { useLang, useSetLang } from "@/lib/i18n";
 
 export function DirectionLoader() {
   const lang = useLang();
+  const setLang = useSetLang();
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -12,20 +13,13 @@ export function DirectionLoader() {
   }, [lang]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("baseera-lang");
-    if (saved === "en" || saved === "ar") {
-      i18nStore.getState().setLang(saved);
-    } else {
-      i18nStore.getState().setLang("ar");
-    }
-  }, []);
-
-  useEffect(() => {
-    const unsub = i18nStore.subscribe((s) => {
-      localStorage.setItem("baseera-lang", s.lang);
-    });
-    return () => unsub();
-  }, []);
+    try {
+      const saved = localStorage.getItem("baseera-lang");
+      if (saved === "en" || saved === "ar") {
+        setLang(saved);
+      }
+    } catch {}
+  }, [setLang]);
 
   return null;
 }

@@ -1,57 +1,65 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react";
-import { useStore } from "zustand";
-import { createStore } from "zustand/vanilla";
+import { createContext, useContext, useCallback, useState, type ReactNode } from "react";
 import arJson from "@/locales/ar.json";
 import enJson from "@/locales/en.json";
 
 export type Lang = "ar" | "en";
 
-interface I18nState {
+interface I18nContextValue {
   lang: Lang;
   setLang: (lang: Lang) => void;
   toggleLang: () => void;
 }
 
-export const i18nStore = createStore<I18nState>((set, get) => ({
-  lang: "ar",
-  setLang: (lang) => set({ lang }),
-  toggleLang: () => set({ lang: get().lang === "ar" ? "en" : "ar" }),
-}));
-
-const I18nContext = createContext<typeof i18nStore | null>(null);
+const I18nContext = createContext<I18nContextValue | null>(null);
 
 const arDict = arJson as Record<string, unknown>;
 const enDict = enJson as Record<string, unknown>;
 
 export function I18nProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("ar");
+
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    try {
+      localStorage.setItem("baseera-lang", l);
+    } catch {}
+  }, []);
+
+  const toggleLang = useCallback(() => {
+    setLangState((prev) => {
+      const next = prev === "ar" ? "en" : "ar";
+      try {
+        localStorage.setItem("baseera-lang", next);
+      } catch {}
+      return next;
+    });
+  }, []);
+
   return (
-    <I18nContext.Provider value={i18nStore}>
+    <I18nContext.Provider value={{ lang, setLang, toggleLang }}>
       {children}
     </I18nContext.Provider>
   );
 }
 
-export function useI18nStore() {
-  const store = useContext(I18nContext);
-  if (!store) throw new Error("Missing I18nProvider");
-  return store;
+function useI18n() {
+  const ctx = useContext(I18nContext);
+  if (!ctx) throw new Error("Missing I18nProvider");
+  return ctx;
 }
 
-export function useLang() {
-  const store = useI18nStore();
-  return useStore(store, (s) => s.lang);
+export function useLang(): Lang {
+  return useI18n().lang;
 }
 
 export function useSetLang() {
-  const store = useI18nStore();
-  return useStore(store, (s) => s.setLang);
+  return useI18n().setLang;
 }
 
 export function useToggleLang() {
-  const store = useI18nStore();
-  return useStore(store, (s) => s.toggleLang);
+  return useI18n().toggleLang;
 }
 
 function getNested(obj: Record<string, unknown>, path: string): string {
@@ -74,3 +82,9 @@ export function useTranslate() {
     [lang]
   );
 }
+
+export const i18nStore = {
+  getState: () => ({ lang: "ar" as Lang }),
+  setState: () => {},
+  subscribe: () => () => {},
+};
