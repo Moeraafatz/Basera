@@ -1,13 +1,11 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is required");
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-04-22.dahlia",
-  typescript: true,
-});
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2026-04-22.dahlia",
+      typescript: true,
+    })
+  : null;
 
 export function getStripePriceId(tier: "free" | "pro" | "enterprise", interval: "month" | "year"): string | null {
   const priceKey = interval === "month" ? "stripe_price_id_monthly" : "stripe_price_id_yearly";

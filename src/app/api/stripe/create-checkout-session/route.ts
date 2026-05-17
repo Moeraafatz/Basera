@@ -6,6 +6,10 @@ import { parseJsonBody, validateBody, required, optional, isOneOf } from "@/lib/
 import { logger } from "@/lib/logger";
 
 async function handler(req: NextRequest) {
+  if (!stripe) {
+    throw new ApiError(503, "Stripe is not configured");
+  }
+
   const supabase = await createClient();
   if (!supabase) {
     throw new ApiError(503, "Database unavailable");
