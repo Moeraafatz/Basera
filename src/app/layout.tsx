@@ -1,41 +1,59 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Inter, Amiri } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CustomScrollbar, HideDefaultScrollbar } from "@/components/CustomScrollbar";
 import { JsonLd } from "@/components/JsonLd";
+import { I18nProvider } from "@/lib/i18n";
+import { AuthProvider } from "@/lib/auth-context";
+import { DirectionLoader } from "@/components/direction-loader";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 
-const BASE_URL = "https://1-prompteng-ai.vercel.app";
+const BASE_URL = "https://baseera-ai.vercel.app";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-arabic",
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  subsets: ["arabic"],
+});
+
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const amiri = Amiri({
+  variable: "--font-display-arabic",
+  weight: ["400", "700"],
+  subsets: ["arabic", "latin"],
 });
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#191919",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Prompt Engineer — Free AI Prompt Generator",
-    template: "%s | Prompt Engineer",
+    default: "بصيرة — حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
+    template: "%s | بصيرة",
   },
-  description: "Transform your ideas into powerful, precise prompts for AI conversations. Free AI prompt generator for ChatGPT, Claude, Gemini, and more.",
-  keywords: ["AI prompt generator", "ChatGPT prompts", "Claude prompts", "prompt engineering", "AI writing assistant", "free AI tools", "prompt optimization", "Midjourney prompts", "DALL-E prompts"],
-  authors: [{ name: "Prompt Engineer" }],
-  creator: "Prompt Engineer",
-  publisher: "Prompt Engineer",
+  description: "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال - النصوص، الصور، الفيديو، الكود، والسيرة الذاتية",
+  keywords: ["بصيرة", "Baseera", "محسن الأوامر", "أوامر الذكاء الاصطناعي", "محسن السيرة الذاتية", "AI prompt generator", "prompt engineering", "CV analyzer"],
+  authors: [{ name: "بصيرة" }],
+  creator: "بصيرة",
+  publisher: "بصيرة",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "بصيرة",
+  },
   robots: {
     index: true,
     follow: true,
@@ -50,35 +68,49 @@ export const metadata: Metadata = {
   alternates: {
     canonical: BASE_URL,
     languages: {
-      en: BASE_URL,
+      ar: BASE_URL,
+      en: `${BASE_URL}/en`,
     },
   },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
+    other: [
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "192x192",
+        url: "/icons/icon-192.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "512x512",
+        url: "/icons/icon-512.png",
+      },
+    ],
   },
   openGraph: {
-    title: "Prompt Engineer — Free AI Prompt Generator",
-    description: "Transform your ideas into powerful, precise prompts for AI conversations. Free AI prompt generator for ChatGPT, Claude, Gemini, and more.",
+    title: "بصيرة — حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
+    description: "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال - النصوص، الصور، الفيديو، الكود، والسيرة الذاتية",
     url: BASE_URL,
-    siteName: "Prompt Engineer",
-    locale: "en_US",
+    siteName: "بصيرة",
+    locale: "ar_SA",
     type: "website",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Prompt Engineer - Free AI Prompt Generator",
+        alt: "بصيرة - حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prompt Engineer — Free AI Prompt Generator",
-    description: "Transform your ideas into powerful, precise prompts for AI conversations.",
+    title: "بصيرة — حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
+    description: "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال - النصوص، الصور، الفيديو، الكود، والسيرة الذاتية",
     images: ["/og-image.png"],
-    creator: "@promptengineer",
   },
 };
 
@@ -88,61 +120,63 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        <HideDefaultScrollbar />
-        <CustomScrollbar />
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-        <Toaster
-          position="bottom-center"
-          toastOptions={{
-            style: {
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-              color: "var(--foreground)",
-              borderRadius: "0.625rem",
-            },
-          }}
-        />
-        <JsonLd data={{
-          "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "WebSite",
-              "@id": `${BASE_URL}/#website`,
-              "url": BASE_URL,
-              "name": "Prompt Engineer",
-              "description": "Free AI prompt generator for ChatGPT, Claude, Gemini, and more",
-              "publisher": { "@id": `${BASE_URL}/#organization` },
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": { "@type": "EntryPoint", "urlTemplate": `${BASE_URL}/?s={search_term_string}` },
-                "query-input": "required name=search_term_string"
-              }
-            },
-            {
-              "@type": "Organization",
-              "@id": `${BASE_URL}/#organization`,
-              "name": "Prompt Engineer",
-              "url": BASE_URL,
-              "logo": { "@type": "ImageObject", "url": `${BASE_URL}/logo.svg`, "width": 512, "height": 512 },
-              "description": "Free AI prompt generator tool for creating optimized prompts for various AI models"
-            },
-            {
-              "@type": "WebApplication",
-              "@id": `${BASE_URL}/#webapp`,
-              "name": "AI Prompt Generator",
-              "url": `${BASE_URL}/ai-prompt-generator`,
-              "applicationCategory": "UtilitiesApplication",
-              "operatingSystem": "Web Browser",
-              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-            }
-          ]
-        }}/>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <body className={`${ibmPlexSansArabic.variable} ${inter.variable} ${amiri.variable} antialiased`} suppressHydrationWarning>
+        <I18nProvider>
+          <AuthProvider>
+            <DirectionLoader />
+            <HideDefaultScrollbar />
+            <CustomScrollbar />
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster
+              position="bottom-center"
+              toastOptions={{
+                style: {
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  color: "var(--foreground)",
+                  borderRadius: "0.75rem",
+                },
+              }}
+            />
+            <JsonLd data={{
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": `${BASE_URL}/#website`,
+                  "url": BASE_URL,
+                  "name": "بصيرة",
+                  "description": "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
+                  "publisher": { "@id": `${BASE_URL}/#organization` },
+                  "inLanguage": ["ar", "en"],
+                },
+                {
+                  "@type": "Organization",
+                  "@id": `${BASE_URL}/#organization`,
+                  "name": "بصيرة",
+                  "url": BASE_URL,
+                  "logo": { "@type": "ImageObject", "url": `${BASE_URL}/logo.svg`, "width": 512, "height": 512 },
+                  "description": "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال",
+                },
+                {
+                  "@type": "WebApplication",
+                  "@id": `${BASE_URL}/#webapp`,
+                  "name": "بصيرة - محسّن الأوامر",
+                  "url": `${BASE_URL}/text`,
+                  "applicationCategory": "UtilitiesApplication",
+                  "operatingSystem": "Web Browser",
+                  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+                }
+              ]
+            }}/>
+            <ServiceWorkerRegistration />
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );

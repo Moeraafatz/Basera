@@ -1,0 +1,235 @@
+{
+  "nav": {
+    "home": "Home",
+    "text": "Prompt Enhancer",
+    "cv": "CV Analyzer",
+    "image": "Image Prompts",
+    "video": "Video Prompts",
+    "analytics": "Analytics",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "signup": "Sign Up",
+    "profile": "Profile",
+    "logout": "Logout",
+    "startCreating": "Start Creating",
+    "language": "العربية"
+  },
+  "hero": {
+    "title": "Baseera",
+    "subtitle": "Transform Ideas into Professional AI Prompts",
+    "description": "A universal platform for enhancing AI prompts across every field — text, images, video, code, and CVs",
+    "cta": "Try for Free",
+    "stats": "500+ Ready-to-Use Templates",
+    "models": "Works with GPT, Claude, Gemini, Grok & more"
+  },
+  "tools": {
+    "title": "Our Tools",
+    "subtitle": "A complete suite of AI prompt enhancement tools",
+    "text": {
+      "name": "Prompt Enhancer",
+      "desc": "Transform your ideas into professional prompts for any AI model"
+    },
+    "cv": {
+      "name": "CV Analyzer",
+      "desc": "Analyze, optimize, and edit your resume for any job market"
+    },
+    "image": {
+      "name": "Image Prompts",
+      "desc": "Create powerful prompts for AI image generation"
+    },
+    "video": {
+      "name": "Video Prompts",
+      "desc": "Professional prompts for AI video generation"
+    },
+    "analytics": {
+      "name": "Analytics Dashboard",
+      "desc": "Track usage, compare models, and estimate costs"
+    }
+  },
+  "common": {
+    "search": "Search...",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "generate": "Generate",
+    "generating": "Generating...",
+    "clear": "Clear",
+    "save": "Save",
+    "share": "Share",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "noResults": "No results found",
+    "tryAgain": "Try again",
+    "options": "Options",
+    "settings": "Settings",
+    "menu": "Menu",
+    "enhanced": "Enhanced Generation",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "signInWithGoogle": "Sign in with Google",
+    "signUpWithGoogle": "Sign up with Google"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to access your saved CVs and prompts",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "createOne": "Create one",
+      "errorInvalidEmail": "Invalid email address",
+      "errorInvalidPassword": "Password must be at least 6 characters",
+      "errorWrongCredentials": "Incorrect email or password",
+      "errorGeneric": "Login failed. Please try again"
+    },
+    "signup": {
+      "title": "Create Your Account",
+      "subtitle": "Join Baseera and save your work",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "errorPasswordMismatch": "Passwords do not match",
+      "errorWeakPassword": "Password is too weak",
+      "errorEmailExists": "This email is already registered",
+      "errorGeneric": "Account creation failed. Please try again",
+      "success": "Account created successfully!"
+    },
+    "forgot": {
+      "title": "Reset Your Password",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "submit": "Send Reset Link",
+      "back": "Back to Login",
+      "success": "Check your email",
+      "errorGeneric": "Failed to send. Please try again"
+    },
+    "verification": {
+      "title": "Verify Your Email",
+      "subtitle": "We sent a confirmation link to your email",
+      "resend": "Resend Link",
+      "back": "Go Back"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Manage your saved CVs and prompts",
+    "savedPrompts": "Saved Prompts",
+    "savedCVs": "Saved CVs",
+    "usageStats": "Usage Stats",
+    "recentActivity": "Recent Activity",
+    "noPrompts": "No saved prompts yet",
+    "noCVs": "No saved CVs yet",
+    "noActivity": "No recent activity",
+    "totalPrompts": "Total Prompts",
+    "totalCVs": "Total CVs",
+    "totalTokens": "Total Tokens",
+    "memberSince": "Member since",
+    "editProfile": "Edit Profile",
+    "promptHistory": "Prompt History",
+    "cvHistory": "CV History",
+    "service": "Service",
+    "model": "Model",
+    "date": "Date",
+    "view": "View",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete?"
+  },
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Manage your account information",
+    "name": "Name",
+    "email": "Email",
+    "language": "Preferred Language",
+    "arabic": "Arabic",
+    "english": "English",
+    "saveChanges": "Save Changes",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "deleteAccount": "Delete Account",
+    "deleteWarning": "This will permanently delete all your data",
+    "avatar": "Avatar",
+    "saved": "Changes saved"
+  },
+  "features": {
+    "title": "Why Baseera?",
+    "subtitle": "The most comprehensive AI prompt enhancement platform",
+    "multiModel": {
+      "title": "Multi-Model",
+      "desc": "Works with all major AI models - GPT, Claude, Gemini, and more"
+    },
+    "arabic": {
+      "title": "Every Field",
+      "desc": "Prompts for content, business, coding, creative, marketing, and more"
+    },
+    "liveEdit": {
+      "title": "Live Editing",
+      "desc": "Edit and refine your prompts in real-time with AI assistance"
+    },
+    "ats": {
+      "title": "CV Optimization",
+      "desc": "Analyze and improve your resume for any job market worldwide"
+    }
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "contact": "Contact Us"
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "Start free and upgrade when you need more power",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save20": "Save 17%",
+    "popular": "Most Popular",
+    "free": "Free",
+    "month": "mo",
+    "year": "yr",
+    "saveYearly": "Save {{savings}}% with yearly billing",
+    "upgrade": "Upgrade",
+    "currentPlan": "Current Plan",
+    "contactSales": "Contact Sales",
+    "loading": "Loading...",
+    "redirecting": "Redirecting to checkout...",
+    "error": "Failed to create checkout session"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "active": "Active",
+    "trialing": "Trialing",
+    "pastDue": "Past Due",
+    "canceled": "Canceled",
+    "unpaid": "Unpaid",
+    "plan": "Plan",
+    "billing": "Billing",
+    "renewsOn": "Renews on",
+    "manageBilling": "Manage Billing",
+    "upgrade": "Upgrade"
+  },
+  "tiers": {
+    "free": "Free",
+    "pro": "Pro",
+    "enterprise": "Enterprise"
+  },
+  "usage": {
+    "unlimited": "Unlimited",
+    "exceeded": "Exceeded",
+    "prompts": "Prompts",
+    "cvAnalyses": "CV Analyses",
+    "imageGenerations": "Image Generations",
+    "videoGenerations": "Video Generations"
+  },
+  "auth": {
+    "loginRequired": "Login required"
+  },
+  "dashboard": {
+    "usage": "Usage"
+  }
+}

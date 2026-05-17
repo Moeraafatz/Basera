@@ -1,16 +1,13 @@
 import { MetadataRoute } from "next";
 
-const BASE_URL = "https://1-prompteng-ai.vercel.app";
+const BASE_URL = "https://baseera.vercel.app";
 
 const TOOL_PAGES = [
-  { path: "/ai-prompt-generator", priority: "1.0", changefreq: "weekly" },
-  { path: "/prompt-checker", priority: "0.9", changefreq: "weekly" },
-  { path: "/image-prompt", priority: "0.9", changefreq: "weekly" },
-  { path: "/veo3-prompt", priority: "0.9", changefreq: "weekly" },
-  { path: "/ai-humanizer", priority: "0.9", changefreq: "weekly" },
-  { path: "/image-to-prompt", priority: "0.9", changefreq: "weekly" },
-  { path: "/ai-text-detector", priority: "0.8", changefreq: "weekly" },
-  { path: "/prompt-library", priority: "0.8", changefreq: "weekly" },
+  { path: "/text", priority: "1.0", changefreq: "weekly" },
+  { path: "/cv", priority: "0.9", changefreq: "weekly" },
+  { path: "/image", priority: "0.9", changefreq: "weekly" },
+  { path: "/video", priority: "0.9", changefreq: "weekly" },
+  { path: "/code", priority: "0.9", changefreq: "weekly" },
   { path: "/terms", priority: "0.5", changefreq: "monthly" },
   { path: "/privacy", priority: "0.5", changefreq: "monthly" },
 ];

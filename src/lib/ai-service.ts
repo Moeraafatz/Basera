@@ -1,64 +1,16 @@
-import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { routeCompletion } from "./model-router";
 
-let openai: OpenAI | null = null;
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-    baseURL: "https://openrouter.ai/api/v1",
-  });
-}
-
-let genAI: GoogleGenerativeAI | null = null;
-if (process.env.GOOGLE_API_KEY) {
-  try {
-    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  } catch {
-    genAI = null;
-  }
-}
-
-async function callWithFallback(
-  messages: { role: string; content: string }[],
-  maxTokens: number,
-  temperature: number
-): Promise<string> {
-  if (!openai && !genAI) {
-    throw new Error("No AI credentials configured");
-  }
-
-  if (openai) {
-    try {
-      const completion = await openai.chat.completions.create({
-        model: "anthropic/claude-sonnet-4",
-        messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
-        max_tokens: maxTokens,
-        temperature,
-      });
-      return completion.choices[0]?.message?.content?.trim() || "";
-    } catch (openaiErr) {
-      if (!genAI) throw openaiErr;
-      const lastUserMsg = messages.filter((m) => m.role === "user").pop();
-      const prompt = lastUserMsg?.content || "";
-      try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent(prompt);
-        return result.response.text().trim();
-      } catch (geminiErr) {
-        console.error("Google API also failed:", geminiErr);
-        throw openaiErr;
-      }
-    }
-  } else if (genAI) {
-    const lastUserMsg = messages.filter((m) => m.role === "user").pop();
-    const prompt = lastUserMsg?.content || "";
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-  }
-
-  return "";
-}
+/**
+ * AI Service Layer — unified interface for all AI operations.
+ *
+ * All requests route through model-router.ts which distributes across:
+ * - OpenRouter (Claude, GPT, Gemini via single key)
+ * - Google AI Studio (Gemini native)
+ * - Groq (ultra-low latency Llama)
+ * - Cerebras (high-throughput Llama)
+ * - DeepSeek (best reasoning)
+ * - Pollinations (image generation)
+ */
 
 export async function generateAIPrompt(params: {
   input: string;
@@ -71,83 +23,81 @@ export async function generateAIPrompt(params: {
   if (!input.trim()) return "";
 
   const prefixes: Record<string, string> = {
-    simple: "You are a helpful AI assistant. Your goal is to provide clear, concise, and practical responses that solve the user's problem efficiently.",
-    advanced: "You are a highly skilled AI expert with deep domain knowledge. Your role is to deliver well-structured, detailed, and actionable responses that demonstrate genuine expertise.",
-    expert: "You are a world-class specialist and thought leader. Your mission is to produce exceptional, production-grade outputs that reflect deep expertise, rigorous analysis, and proven best practices.",
+    simple: "أنت مساعد ذكاء اصطناعي مفيد. هدفك تقديم إجابات واضحة ومختصرة وعملية.",
+    advanced: "أنت خبير ذكاء اصطناعي متمرس بمعرفة عميقة في المجال. تقدم إجابات منظمة ومفصلة وقابلة للتطبيق.",
+    expert: "أنت متخصص من الطراز العالمي وقائد فكري. تقدم مخرجات استثنائية بجودة احترافية تعكس خبرة عميقة وتحليل دقيق.",
   };
 
   const categoryContext: Record<string, string> = {
-    "Content Creation": "Create content that is engaging, well-structured, and optimized for the target audience. Use clear headings, compelling narratives, and persuasive language. Ensure the content is scannable, shareable, and drives the desired action.",
-    "Business & Marketing": "Develop strategic, data-informed approaches with clear value propositions. Focus on measurable outcomes, market positioning, competitive advantages, and conversion optimization. Include actionable tactics with timelines.",
-    "Coding & Tech": "Write clean, maintainable, and well-documented code. Provide detailed implementation guidance including architecture decisions, error handling, edge cases, testing strategies, and deployment considerations. Include code examples where helpful.",
-    "Creative Writing": "Craft vivid, emotionally engaging content with strong narrative voice. Use descriptive language, compelling metaphors, and authentic tone. Balance creativity with purpose — every element should serve the story or message.",
-    "Education & Learning": "Explain complex concepts using clear language, relatable analogies, and structured progression from fundamentals to advanced topics. Include memory hooks, practical applications, and knowledge checks to reinforce learning.",
-    "Research & Analysis": "Conduct thorough, evidence-based analysis with logical structure. Present findings with supporting data, alternative perspectives, and actionable conclusions. Include methodology transparency and acknowledge limitations.",
+    "Content Creation": "أنشئ محتوى جذاباً ومنظماً ومحسّناً للجمهور المستهدف. استخدم عناوين واضحة وسرد مقنع ولغة مؤثرة.",
+    "Business & Marketing": "طوّر استراتيجيات مبنية على البيانات مع مقترحات قيمة واضحة. ركّز على النتائج القابلة للقياس والتموضع في السوق.",
+    "Coding & Tech": "اكتب كوداً نظيفاً وقابلاً للصيانة وموثّقاً جيداً. قدّم إرشادات تنفيذية مفصلة مع قرارات معمارية ومعالجة الأخطاء.",
+    "Creative Writing": "صِغ محتوى حياً ومؤثراً بصوت سردي قوي. استخدم لغة وصفية واستعارات مقنعة ونبرة أصيلة.",
+    "Education & Learning": "اشرح المفاهيم المعقدة بلغة واضحة وتشبيهات قريبة من الواقع. قدّم تطبيقات عملية ومراجعات معرفية.",
+    "Research & Analysis": "أجرِ تحليلاً شاملاً مبنياً على الأدلة مع هيكل منطقي. قدّم النتائج مع البيانات الداعمة والوجهات البديلة.",
   };
 
   const levelDetail: Record<string, string> = {
-    simple: `TASK: ${input}
+    simple: `المهمة: ${input}
 
-Format your response as follows:
-1. Brief introduction (1-2 sentences)
-2. Core answer (concise and practical)
-3. Key takeaway (actionable next step)
+نسّق إجابتك كالتالي:
+1. مقدمة موجزة (1-2 جملة)
+2. الإجابة الأساسية (مختصرة وعملية)
+3. الخلاصة (خطوة عملية قابلة للتنفيذ)
 
-Keep responses under 200 words. Prioritize clarity and immediacy.`,
-    advanced: `TASK: ${input}
+حافظ على الإجابة تحت 200 كلمة. قدّم الوضوح والفورية.`,
+    advanced: `المهمة: ${input}
 
-Provide a comprehensive response that includes:
-- Clear explanation of the approach
-- Step-by-step breakdown with reasoning
-- Practical examples or demonstrations
-- Key considerations and potential pitfalls
-- Summary of best practices and recommendations
+قدّم إجابة شاملة تتضمن:
+- شرح واضح للنهج المتبع
+- تفصيل خطوة بخطوة مع التبرير
+- أمثلة عملية أو توضيحات
+- اعتبارات رئيسية والمخاطر المحتملة
+- ملخص لأفضل الممارسات والتوصيات
 
-Structure output with clear sections. Use bullet points and numbering where appropriate. Aim for depth without unnecessary elaboration.`,
-    expert: `ROLE: Senior specialist with proven expertise in this domain.
+نسّق المخرجات بأقسام واضحة. استخدم النقاط والترقيم حيث مناسب.`,
+    expert: `الدور: متخصص أول بخبرة مثبتة في هذا المجال.
 
-TASK: ${input}
+المهمة: ${input}
 
-REQUIREMENTS:
-- Deliver an exceptionally detailed and comprehensive response
-- Include multi-angle analysis with supporting evidence and rationale
-- Provide step-by-step methodology with implementation guidance
-- Address edge cases, failure modes, and mitigation strategies
-- Include real-world examples, case studies, or reference implementations
-- Define clear quality criteria and success metrics
-- Recommend follow-up actions and deeper exploration paths
+المتطلبات:
+- قدّم إجابة استثنائية مفصلة وشاملة
+- تضمين تحليل متعدد الزوايا مع الأدلة والتبريرات
+- منهجية خطوة بخطوة مع إرشادات التنفيذ
+- معالجة الحالات الاستثنائية وأنماط الفشل واستراتيجيات التخفيف
+- أمثلة من العالم الحقيقي أو دراسات حالة أو مراجع تنفيذية
+- معايير جودة واضحة ومقاييس النجاح
+- توصيات لمتابعة الاستكشاف
 
-OUTPUT FORMAT:
-## Overview
-[Concise executive summary of approach]
+تنسيق المخرجات:
+## نظرة عامة
+[ملخص تنفيذي موجز للنهج]
 
-## Detailed Analysis
-[In-depth exploration with rationale]
+## التحليل التفصيلي
+[استكشاف معمّق مع التبريرات]
 
-## Implementation Guide
-[Actionable steps with priorities]
+## دليل التنفيذ
+[خطوات عملية مع الأولويات]
 
-## Best Practices
-[Top 5-7 recommendations with explanations]
+## أفضل الممارسات
+[أهم 5-7 توصيات مع الشرح]
 
-## Quality Checklist
-[Criteria for evaluating success]
+## قائمة الجودة
+[معايير تقييم النجاح]
 
-## Further Considerations
-[Related topics, advanced concepts, common pitfalls]
-
-Ensure every section delivers actionable value. Leave no ambiguity.`,
+## اعتبارات إضافية
+[مواضيع ذات صلة ومفاهيم متقدمة]`,
   };
 
   const systemPrompt = `${prefixes[level] || prefixes.advanced}\n\n${categoryContext[category] || categoryContext["Content Creation"]}\n\n${levelDetail[level] || levelDetail.advanced}`;
 
-  return callWithFallback(
+  return routeCompletion(
+    "text-generate",
     [
       { role: "system", content: systemPrompt },
       { role: "user", content: input },
     ],
-    1024,
-    0.7
+    { maxTokens: 2048, temperature: 0.7 }
   );
 }
 
@@ -158,78 +108,69 @@ export async function generateImagePrompt(params: {
   ratio: string;
   quality: string;
 }): Promise<string> {
-  const { input, model, style: _style, quality: _quality } = params;
+  const { input, model, style, ratio, quality } = params;
 
   if (!input.trim()) return "";
 
   const modelInstructions: Record<string, string> = {
-    "dall-e": `You are an expert image prompt engineer. Create an ultra-detailed, cinematic DALL-E 3 prompt for: "${input}"
+    "dall-e": `أنت مهندس أوامر صور خبير. أنشئ أمر صورة سينمائي مفصّل لـ DALL-E 3 عن: "${input}"
 
-STYLE: ${params.style || "Photorealistic"}
+النمط: ${style || "واقعي"}
+الجودة: ${quality || "عالية"}
 
-QUALITY: ${params.quality || "hd"}
+المتطلبات:
+- صف الموضوع بتفاصيل غنية ومحددة (المظهر، الوضعية، التعبير، الإعداد)
+- حدّد جودة الإضاءة واتجاهها
+- عيّن التركيب ومنظور الكاميرا
+- بيّن النمط الفني ولوحة الألوان
+- أضف الجو العام والنبرة العاطفية
 
-REQUIREMENTS:
-- Describe the subject with rich, specific detail (appearance, posture, expression, setting)
-- Specify lighting quality and direction (e.g., golden hour, volumetric, rim lighting)
-- Define composition and camera perspective (e.g., low angle, wide shot, rule of thirds)
-- State the artistic style and color palette
-- Include atmosphere, mood, and emotional tone
-- Add technical quality markers (resolution, clarity, depth)
+اكتب كأمر طبيعي متدفق — بدون نقاط أو قوائم.`,
+    midjourney: `أنت مهندس أوامر Midjourney خبير. أنشئ أمر سينمائي احترافي عن: "${input}"
 
-Format as flowing, vivid natural language — no bullet points, no lists. The prompt should read like a compelling art direction brief for a professional cinematographer and set designer working together.`,
-    midjourney: `You are an expert Midjourney prompt engineer. Create a cinematic, professional Midjourney prompt for: "${input}"
+النمط: ${style || "واقعي"}
 
-STYLE: ${params.style || "Photorealistic"}
+المتطلبات:
+- الموضوع: وصف تفصيلي مع خصائص محددة
+- البيئة: الإعداد والخلفية والعناصر الجوية
+- الإضاءة: جودة محددة واتجاه
+- التركيب: زاوية الكاميرا وعمق المجال
+- المراجع الفنية: التأثيرات الفنية
+- المزاج والجو: النبرة العاطفية
+- أنهِ بمعاملات Midjourney: --ar ${ratio || "1:1"} --style raw --s 750 --q 2 --v 6.1`,
+    "stable-diffusion": `أنت مهندس أوامر Stable Diffusion XL خبير. أنشئ أمر مفصّل وعالي الجودة عن: "${input}"
 
-REQUIREMENTS:
-- Subject: detailed description of the main subject with specific characteristics
-- Environment: setting, background elements, atmospheric details
-- Lighting: specific quality (golden hour, volumetric, dramatic rim light, etc.)
-- Composition: camera angle, depth of field, framing
-- Style references: artistic influences and visual references
-- Mood and atmosphere: emotional tone and visual feeling
-- End with high-impact Midjourney parameters: --ar ${params.ratio || "1:1"} --style raw --s 750 --q 2 --v 6.1
+النمط: ${style || "واقعي"}
 
-Create a prompt that reads like a cinematic shot list from a professional film production.`,
-    "stable-diffusion": `You are an expert Stable Diffusion XL prompt engineer. Create a detailed, high-quality SDXL prompt for: "${input}"
+المتطلبات:
+- تركيز الموضوع: وصف تفصيلي مع مميزات محددة
+- تفاصيل البيئة: الإعداد والدعامات وعناصر الخلفية
+- إعداد الإضاءة: النوع والاتجاه والجودة
+- الكاميرا/الزاوية: المنظور وعمق المجال والتركيب
+- معزّزات الجودة: (masterpiece, best quality, ultra-detailed, 8K, HDR)
+- النمط الفني: واصفات أسلوب محددة`,
+    flux: `أنت مهندس أوامر FLUX Pro خبير. أنشئ أمر محسّن لـ FLUX Pro/Seedream عن: "${input}"
 
-STYLE: ${params.style || "Photorealistic"}
+النمط: ${style || "واقعي"}
 
-REQUIREMENTS:
-- Subject focus: detailed, specific subject description with distinguishing features
-- Environment details: setting, props, background elements
-- Lighting setup: type, direction, quality
-- Camera/angle: perspective, depth of field, composition
-- Quality boosters: (masterpiece, best quality, ultra-detailed, 8K, HDR)
-- Artistic style: specific style descriptors
-- Negative prompt: common issues to avoid
-
-Structure: positive prompt first, then quality markers, then style. Make each element distinct and powerful.`,
-    flux: `You are an expert FLUX Pro prompt engineer. Create a professional prompt optimized for FLUX Pro/Seedream for: "${input}"
-
-STYLE: ${params.style || "Photorealistic"}
-
-REQUIREMENTS:
-- Primary subject: highly detailed description with specific attributes
-- Scene environment: setting, atmosphere, contextual elements
-- Lighting design: specific light quality, direction, and color temperature
-- Visual composition: camera perspective, depth, framing
-- Style precision: exact artistic direction and reference points
-- Technical quality: 8K, photorealistic, cinematic grade, sharp detail
-
-Write as a professional art direction brief. Be extremely specific and descriptive — every detail shapes the final output.`,
+المتطلبات:
+- الموضوع الأساسي: وصف شديد التفصيل مع سمات محددة
+- بيئة المشهد: الإعداد والجو والعناصر السياقية
+- تصميم الإضاءة: جودة محددة واتجاه ودرجة حرارة اللون
+- التركيب البصري: منظور الكاميرا والعمق والتأطير
+- دقة النمط: اتجاه فني دقيق ونقاط مرجعية
+- الجودة التقنية: 8K, واقعي, سينمائي, تفاصيل حادة`,
   };
 
   const instruction = modelInstructions[model] || modelInstructions["dall-e"];
 
-  return callWithFallback(
+  return routeCompletion(
+    "image-prompt",
     [
       { role: "system", content: instruction },
-      { role: "user", content: "Generate this image prompt." },
+      { role: "user", content: "أنشئ أمر الصورة هذا." },
     ],
-    1024,
-    0.7
+    { maxTokens: 1024, temperature: 0.7 }
   );
 }
 
@@ -242,55 +183,45 @@ export async function generateVideoPrompt(params: {
   if (!input.trim()) return "";
 
   const dimensionSpecs: Record<string, string> = {
-    "16:9": "Wide cinematic landscape, dramatic environmental shots, sweeping establishing views, epic scale",
-    "9:16": "Vertical portrait format, intimate close-ups, emotional depth, focused single-subject framing",
-    "1:1": "Square format, balanced composition, versatile framing, social-media optimized",
-    "4:3": "Classic television aspect, traditional cinematography, grounded framing, documentary style",
+    "16:9": "مشهد سينمائي واسع، لقطات بيئية درامية، مشاهد تأسيسية شاملة",
+    "9:16": "تنسيق عمودي، لقطات مقربة حميمة، عمق عاطفي، تأطير مركز",
+    "1:1": "تنسيق مربع، تركيب متوازن، تأطير متعدد الاستخدامات",
+    "4:3": "تنسيق تلفزيوني كلاسيكي، سينما تقليدية، تأطير وثائقي",
   };
 
-  const durationSpecs: Record<string, string> = {
-    "5": "Condensed, impactful, high-energy sequence",
-    "10": "Balanced pacing, natural flow, cinematic rhythm",
-    "15": "Extended narrative, rich visual storytelling, immersive journey",
-  };
-
-  return callWithFallback(
+  return routeCompletion(
+    "video-prompt",
     [
       {
         role: "system",
-        content: `You are an expert video prompt engineer for VEO3 and Sora. Create a professional, cinematic video generation prompt.
+        content: `أنت مهندس أوامر فيديو خبير لـ VEO3 و Sora. أنشئ أمر توليد فيديو سينمائي احترافي.
 
-## SCENE DESCRIPTION
+## وصف المشهد
 ${input}
 
-## TECHNICAL SPECIFICATIONS
-- Duration: ${dimension} seconds
-- Aspect Ratio: ${dimension}
-- Framing: ${dimensionSpecs[dimension] || dimensionSpecs["16:9"]}
-- Pacing: ${durationSpecs[dimension] || durationSpecs["10"]}
+## المواصفات التقنية
+- نسبة العرض: ${dimension}
+- التأطير: ${dimensionSpecs[dimension] || dimensionSpecs["16:9"]}
 
-## CAMERA & PRODUCTION
-- Camera Movement: Dynamic and purposeful — use dolly, crane, or stabilized tracking for smooth cinematic motion
-- Shot Type: Mix of establishing wide shots and intimate close-ups for visual variety
-- Focus: Rack focus transitions between subject planes for depth
-- Depth of Field: Shallow with cinematic bokeh where appropriate
+## الكاميرا والإنتاج
+- حركة الكاميرا: ديناميكية وهادفة — استخدم دوللي أو رافعة لحركة سينمائية سلسة
+- نوع اللقطة: مزيج من اللقطات الواسعة التأسيسية والمقربة الحميمة
+- التركيز: انتقالات تركيكية بين مستويات الموضوع للعمق
+- عمق المجال: ضحل مع بوكيه سينمائي حيث مناسب
 
-## LIGHTING & ATMOSPHERE
-- Primary Lighting: Natural golden hour with volumetric light rays
-- Secondary: Rim lighting for subject separation
-- Atmosphere: Evocative mood with atmospheric depth (fog, haze, or particles)
-- Color Grade: Cinematic with rich contrast and balanced color temperature
+## الإضاءة والجو
+- الإضاءة الأساسية: ساعة ذهبية طبيعية مع أشعة ضوء حجمية
+- الثانوية: إضاءة حافة لفصل الموضوع
+- الجو: مزاج مؤثر مع عمق جوي (ضباب أو جزيئات)
+- التدرج اللوني: سينمائي بتباين غني ودرجة حرارة لون متوازنة
 
-## VISUAL QUALITY
-- Quality: Ultra-cinematic, 4K+ resolution, film grain texture
-- Composition: Rule of thirds, dynamic leading lines, balanced negative space
-- Effects: Subtle lens flares, natural light scatter, professional post-processing
-- Motion: Smooth 24fps or 30fps with natural easing`,
+## الجودة البصرية
+- الجودة: سينمائي فائق، دقة 4K+، ملمس حبيبي
+- التركيب: قاعدة الأثلاث، خطوط قيادة ديناميكية، مساحة سلبية متوازنة`,
       },
       { role: "user", content: input },
     ],
-    1024,
-    0.7
+    { maxTokens: 1024, temperature: 0.7 }
   );
 }
 
@@ -299,41 +230,38 @@ export async function analyzeReference(
   type?: string,
   context?: string
 ): Promise<string> {
-  if (!genAI) {
-    const instruction = `You are an expert visual designer and brand analyst. Analyze the reference image provided and extract detailed design characteristics.
+  const instruction = `أنت مصمم بصري خبير ومحلل علامات تجارية. حلّل صورة المرجع المقدمة واستخرج خصائص التصميم التفصيلية.
 
-TASK: Analyze this reference image for use in ${type || "general"} design context${context ? ` about ${context}` : ""}.
+المهمة: حلّل صورة المرجع هذه لاستخدامها في سياق تصميم ${type || "عام"}${context ? ` حول ${context}` : ""}.
 
-ANALYSIS DIMENSIONS:
-1. COLOR PALETTE: Identify 5-8 dominant colors with HEX codes.
-2. TYPOGRAPHY: Font families, weights, sizes, hierarchy.
-3. VISUAL STYLE: Realistic, flat, minimal, maximalist, brutalist, organic, geometric, retro, modern, etc.
-4. LAYOUT & COMPOSITION: Grid-based vs. freeform, whitespace, alignment.
-5. DESIGN ELEMENTS: Illustrations, icons, photography style, patterns, gradients.
-6. MOOD & EMOTION: What feeling does this design convey?
-7. BRAND PERSONALITY: Professional, playful, luxurious, eco-friendly, tech-forward, edgy, etc.
-8. TECHNICAL DETAILS: Aspect ratios, medium, design patterns.
+أبعاد التحليل:
+1. لوحة الألوان: 5-8 ألوان سائدة مع رموز HEX
+2. الخطوط: العائلات والأوزان والأحجام والتسلسل الهرمي
+3. النمط البصري: واقعي، مسطح، بسيط، maximalist، brutalist، عضوي، هندسي
+4. التخطيط والتركيب: قائم على الشبكة أم حر، المساحة البيضاء، المحاذاة
+5. عناصر التصميم: رسوم توضيحية، أيقونات، أسلوب التصوير، أنماط، تدرجات
+6. المزاج والعاطفة: ما الشعور الذي ينقله هذا التصميم؟
+7. شخصية العلامة التجارية: احترافي، مرح، فاخر، صديق للبيئة، تقني
+8. التفاصيل التقنية: نسب العرض، الوسيط، أنماط التصميم
 
-Be specific. This analysis will be used as reference for generating new design prompts.`;
+كن محدّداً. سيُستخدم هذا التحليل كمرجع لتوليد أوامر تصميم جديدة.`;
 
-    return callWithFallback([{ role: "user", content: instruction }], 1200, 0.3);
-  }
+  const apiKey = process.env.GOOGLE_AI_STUDIO_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) throw new Error("Google API key not configured");
 
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const imagePart = {
-      inlineData: {
-        data: imageBase64,
-        mimeType: "image/jpeg",
-      },
-    };
-    const instruction = `You are an expert visual designer. Analyze this reference image. Return analysis in this exact format:\n- Colors: [list with HEX]\n- Typography: [fonts, sizes]\n- Style: [descriptors]\n- Composition: [layout notes]\n- Elements: [visual elements]\n- Mood: [emotional tone]\n- Brand: [personality]\n- Technical: [practical details]\n\nContext: ${type || "general"} design${context ? ` about ${context}` : ""}`;
-    const result = await model.generateContent([instruction, imagePart]);
-    return result.response.text().trim();
-  } catch (err) {
-    console.error("Gemini vision error:", err);
-    throw err;
-  }
+  const { GoogleGenerativeAI } = await import("@google/generative-ai");
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  const imagePart = {
+    inlineData: {
+      data: imageBase64,
+      mimeType: "image/jpeg",
+    },
+  };
+
+  const result = await model.generateContent([instruction, imagePart]);
+  return result.response.text().trim();
 }
 
 export async function optimizeTextPrompt(
@@ -341,34 +269,67 @@ export async function optimizeTextPrompt(
   promptTemplate?: string,
   category?: string
 ): Promise<string> {
-  const instruction = `You are an expert prompt engineer and AI specialist. Your task is to optimize and enhance user prompts to get the best possible output from AI models.
+  const instruction = `أنت مهندس أوامر خبير ومتخصص في الذكاء الاصطناعي. مهمتك تحسين وتعزيز أوامر المستخدمين للحصول على أفضل مخرجات ممكنة من نماذج الذكاء الاصطناعي.
 
-TASK: Transform the user's input into a highly optimized, detailed prompt.
+المهمة: حوّل مدخل المستخدم إلى أمر محسّن ومفصّل للغاية.
 
-INPUT: "${textInput}"
-${promptTemplate ? `\nPROMPT TEMPLATE: "${promptTemplate}"` : ""}
-${category ? `\nCATEGORY: ${category}` : ""}
+المدخل: "${textInput}"
+${promptTemplate ? `\nقالب الأمر: "${promptTemplate}"` : ""}
+${category ? `\nالفئة: ${category}` : ""}
 
-INSTRUCTIONS:
-1. Analyze the user's intent and goal
-2. Use the template structure if provided, or create an optimal structure
-3. Add specific details, context, and constraints
-4. Include output format specifications
-5. Add relevant domain knowledge for better results
-6. Make it clear and unambiguous
+التعليمات:
+1. حلّل نية المستخدم والهدف
+2. استخدم هيكل القالب إن وُجد، أو أنشئ هيكل أمثل
+3. أضف تفاصيل وسياق وقيود محددة
+4. تضمين مواصفات تنسيق المخرجات
+5. أضف معرفة مجال ذات صلة لنتائج أفضل
+6. اجعله واضحاً وغير غامض
 
-Return ONLY the optimized prompt, no explanations or markdown.`;
+أعد الأمر المحسّن فقط، بدون شروحات أو markdown.`;
 
-  if (!genAI) {
-    return callWithFallback([{ role: "user", content: instruction }], 1500, 0.5);
-  }
-
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent(instruction);
-    return result.response.text().trim();
-  } catch (err) {
-    console.error("Text optimization error:", err);
-    throw err;
-  }
+  return routeCompletion(
+    "text-optimize",
+    [{ role: "user", content: instruction }],
+    { maxTokens: 2048, temperature: 0.5 }
+  );
 }
+
+export async function generateCodePrompt(params: {
+  input: string;
+  language?: string;
+  framework?: string;
+  complexity?: string;
+}): Promise<string> {
+  const { input, language, framework, complexity } = params;
+
+  if (!input.trim()) return "";
+
+  const instruction = `أنت مهندس برمجيات خبير ومهندس أوامر كود. أنشئ أمر كود دقيق ومحسّن.
+
+الطلب: "${input}"
+${language ? `لغة البرمجة: ${language}` : ""}
+${framework ? `الإطار: ${framework}` : ""}
+${complexity ? `مستوى التعقيد: ${complexity}` : ""}
+
+المتطلبات:
+- حدّد بنية المشروع والمعمارية
+- ضمّن معالجة الأخطاء والحالات الاستثنائية
+- أضف اختبارات وحدود
+- قدّم أمثلة كود واضحة
+- تضمين اعتبارات الأمان والأداء
+- أضف توثيق وتعليقات
+
+أعد أمر الكود المحسّن فقط.`;
+
+  return routeCompletion(
+    "code-generate",
+    [
+      { role: "system", content: instruction },
+      { role: "user", content: "أنشئ أمر الكود هذا." },
+    ],
+    { maxTokens: 2048, temperature: 0.6 }
+  );
+}
+
+export { routeCompletion };
+export type { Service } from "./model-router";

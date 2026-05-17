@@ -97,12 +97,12 @@ export function CustomScrollbar() {
     >
       <div
         ref={trackRef}
-        className="relative cursor-pointer h-64 w-3 bg-white/10 rounded-full"
+        className="relative cursor-pointer h-64 w-3 bg-ivory-300/30 rounded-full"
         onClick={handleTrackClick}
       >
         {/* Thumb */}
         <motion.div
-          className="absolute w-3 h-12 -left-0.5 rounded-full cursor-grab select-none bg-gradient-to-b from-violet-400 to-purple-500"
+          className="absolute w-3 h-12 -left-0.5 rounded-full cursor-grab select-none bg-gradient-to-b from-book-cloth to-kraft"
           style={{ top: thumbPosition }}
           onMouseDown={handleMouseDown}
           whileHover={{ scaleX: 1.2 }}
