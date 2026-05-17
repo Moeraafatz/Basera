@@ -27,13 +27,7 @@ function getInitialLang(): Lang {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("ar");
-
-  // Sync initial state with localStorage on mount
-  useState(() => {
-    const initial = getInitialLang();
-    if (initial !== "ar") setLangState(initial);
-  });
+  const [lang, setLangState] = useState<Lang>(() => getInitialLang());
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
