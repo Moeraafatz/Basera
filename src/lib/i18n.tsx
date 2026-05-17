@@ -1,8 +1,10 @@
 "use client";
 
-import { createContext, useContext, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react";
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
+import arJson from "@/locales/ar.json";
+import enJson from "@/locales/en.json";
 
 export type Lang = "ar" | "en";
 
@@ -19,6 +21,9 @@ export const i18nStore = createStore<I18nState>((set, get) => ({
 }));
 
 const I18nContext = createContext<typeof i18nStore | null>(null);
+
+const arDict = arJson as Record<string, unknown>;
+const enDict = enJson as Record<string, unknown>;
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   return (
@@ -49,23 +54,6 @@ export function useToggleLang() {
   return useStore(store, (s) => s.toggleLang);
 }
 
-let arDict: Record<string, unknown> | null = null;
-let enDict: Record<string, unknown> | null = null;
-
-async function loadAr(): Promise<Record<string, unknown>> {
-  if (!arDict) {
-    arDict = (await import("@/locales/ar.json")).default as Record<string, unknown>;
-  }
-  return arDict!;
-}
-
-async function loadEn(): Promise<Record<string, unknown>> {
-  if (!enDict) {
-    enDict = (await import("@/locales/en.json")).default as Record<string, unknown>;
-  }
-  return enDict!;
-}
-
 function getNested(obj: Record<string, unknown>, path: string): string {
   return path.split(".").reduce((acc, key) => {
     if (acc && typeof acc === "object" && key in acc) return (acc as Record<string, unknown>)[key];
@@ -75,12 +63,10 @@ function getNested(obj: Record<string, unknown>, path: string): string {
 
 export function t(lang: Lang, key: string): string {
   const dict = lang === "ar" ? arDict : enDict;
-  if (!dict) return key;
   const val = getNested(dict, key);
   return val;
 }
 
-// Hook version
 export function useTranslate() {
   const lang = useLang();
   return useCallback(
