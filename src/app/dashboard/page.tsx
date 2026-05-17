@@ -46,7 +46,9 @@ interface SubscriptionData {
 export default function DashboardPage() {
   const t = useTranslate();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
   const [prompts, setPrompts] = useState<PromptRecord[]>([]);
   const [cvs, setCVs] = useState<CVRecord[]>([]);
   const [usage, setUsage] = useState<UsageData[]>([]);
@@ -54,10 +56,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/login");
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (!user) return;
@@ -134,7 +136,7 @@ export default function DashboardPage() {
     router.push("/pricing");
   };
 
-  if (authLoading || (isAuthenticated && loading)) {
+  if (isLoading || (isAuthenticated && loading)) {
     return (
       <div className="min-h-screen px-4 py-12 max-w-6xl mx-auto">
         <Skeleton className="h-10 w-64 mb-2" />

@@ -10,6 +10,8 @@ import { I18nProvider } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth-context";
 import { DirectionLoader } from "@/components/direction-loader";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { ClientOnly } from "@/components/client-only";
 
 const BASE_URL = "https://baseera-ai.vercel.app";
 
@@ -122,61 +124,73 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${ibmPlexSansArabic.variable} ${inter.variable} ${amiri.variable} antialiased`} suppressHydrationWarning>
-        <I18nProvider>
-          <AuthProvider>
-            <DirectionLoader />
-            <HideDefaultScrollbar />
-            <CustomScrollbar />
-            <div className="min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster
-              position="bottom-center"
-              toastOptions={{
-                style: {
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  color: "var(--foreground)",
-                  borderRadius: "0.75rem",
-                },
-              }}
-            />
-            <JsonLd data={{
-              "@context": "https://schema.org",
-              "@graph": [
-                {
-                  "@type": "WebSite",
-                  "@id": `${BASE_URL}/#website`,
-                  "url": BASE_URL,
-                  "name": "بصيرة",
-                  "description": "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
-                  "publisher": { "@id": `${BASE_URL}/#organization` },
-                  "inLanguage": ["ar", "en"],
-                },
-                {
-                  "@type": "Organization",
-                  "@id": `${BASE_URL}/#organization`,
-                  "name": "بصيرة",
-                  "url": BASE_URL,
-                  "logo": { "@type": "ImageObject", "url": `${BASE_URL}/logo.svg`, "width": 512, "height": 512 },
-                  "description": "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال",
-                },
-                {
-                  "@type": "WebApplication",
-                  "@id": `${BASE_URL}/#webapp`,
-                  "name": "بصيرة - محسّن الأوامر",
-                  "url": `${BASE_URL}/text`,
-                  "applicationCategory": "UtilitiesApplication",
-                  "operatingSystem": "Web Browser",
-                  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-                }
-              ]
-            }}/>
-            <ServiceWorkerRegistration />
-          </AuthProvider>
-        </I18nProvider>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.onerror = function(msg, url, line, col, error) {
+            console.error("Global error:", msg, "line:", line, "col:", col, error);
+          };
+          window.onunhandledrejection = function(e) {
+            console.error("Unhandled promise rejection:", e.reason);
+          };
+        ` }} />
+        <ErrorBoundary>
+          <ClientOnly>
+            <I18nProvider>
+              <AuthProvider>
+                <DirectionLoader />
+                <HideDefaultScrollbar />
+                <CustomScrollbar />
+                <div className="min-h-screen flex flex-col">
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+                <Toaster
+                  position="bottom-center"
+                  toastOptions={{
+                    style: {
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                      borderRadius: "0.75rem",
+                    },
+                  }}
+                />
+                <JsonLd data={{
+                  "@context": "https://schema.org",
+                  "@graph": [
+                    {
+                      "@type": "WebSite",
+                      "@id": `${BASE_URL}/#website`,
+                      "url": BASE_URL,
+                      "name": "بصيرة",
+                      "description": "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي",
+                      "publisher": { "@id": `${BASE_URL}/#organization` },
+                      "inLanguage": ["ar", "en"],
+                    },
+                    {
+                      "@type": "Organization",
+                      "@id": `${BASE_URL}/#organization`,
+                      "name": "بصيرة",
+                      "url": BASE_URL,
+                      "logo": { "@type": "ImageObject", "url": `${BASE_URL}/logo.svg`, "width": 512, "height": 512 },
+                      "description": "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال",
+                    },
+                    {
+                      "@type": "WebApplication",
+                      "@id": `${BASE_URL}/#webapp`,
+                      "name": "بصيرة - محسّن الأوامر",
+                      "url": `${BASE_URL}/text`,
+                      "applicationCategory": "UtilitiesApplication",
+                      "operatingSystem": "Web Browser",
+                      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+                    }
+                  ]
+                }}/>
+                <ServiceWorkerRegistration />
+              </AuthProvider>
+            </I18nProvider>
+          </ClientOnly>
+        </ErrorBoundary>
       </body>
     </html>
   );

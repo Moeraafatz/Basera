@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslate, useLang } from "@/lib/i18n";
@@ -8,8 +9,11 @@ import { Logo } from "@/components/Logo";
 export function Footer() {
   const t = useTranslate();
   const lang = useLang();
+  const [year, setYear] = React.useState<number | null>(null);
 
-  const RIGHT_ARROW = lang === "ar" ? "\u2190" : "\u2192";
+  React.useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   return (
     <footer className="border-t bg-background">
@@ -56,7 +60,7 @@ export function Footer() {
 
         <div className="mt-10 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} {lang === "ar" ? "بصيرة" : "Baseera"}. {t("footer.rights")}.
+            &copy; {year ?? new Date().getFullYear()} {lang === "ar" ? "بصيرة" : "Baseera"}. {t("footer.rights")}.
           </p>
 
           <a href="https://www.rafbug.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition-opacity">

@@ -24,7 +24,8 @@ export function Navbar() {
   const t = useTranslate();
   const lang = useLang();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const user = useAuthStore((s) => s.user);
+  const userId = useAuthStore((s) => s.user?.id);
+  const userEmail = useAuthStore((s) => s.user?.email);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -34,19 +35,21 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
+    let cancelled = false;
     async function checkAdmin() {
       const supabase = (await import("@/lib/supabase/client")).createClient();
-      if (!supabase) return;
+      if (!supabase || cancelled) return;
       const { data: role } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user!.id)
+        .eq("user_id", userId)
         .single();
-      setIsAdmin(role?.role === "admin");
+      if (!cancelled) setIsAdmin(role?.role === "admin");
     }
     checkAdmin();
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [userId]);
 
   const NAV_LINKS = [
     { href: "/", label: t("nav.home"), icon: Zap },

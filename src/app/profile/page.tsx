@@ -16,7 +16,12 @@ export default function ProfilePage() {
   const router = useRouter();
   const lang = useLang();
   const setLang = useSetLang();
-  const { user, isAuthenticated, isLoading: authLoading, updateProfile, updatePassword, signOut } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const updatePassword = useAuthStore((s) => s.updatePassword);
+  const signOut = useAuthStore((s) => s.signOut);
 
   const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -26,10 +31,10 @@ export default function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/login");
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (user) {
@@ -37,7 +42,7 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  if (authLoading) return null;
+  if (isLoading) return null;
   if (!isAuthenticated) return null;
 
   const handleSaveProfile = async () => {

@@ -34,13 +34,15 @@ interface AdminStats {
 export default function AdminPage() {
   const t = useTranslate();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/login");
       return;
     }
@@ -66,7 +68,7 @@ export default function AdminPage() {
     }
 
     checkAdmin();
-  }, [authLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     if (!isAdmin || !user) return;
@@ -129,7 +131,7 @@ export default function AdminPage() {
     fetchStats();
   }, [isAdmin, user]);
 
-  if (authLoading || loading) {
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen px-4 py-12 max-w-6xl mx-auto">
         <Skeleton className="h-10 w-48 mb-8" />

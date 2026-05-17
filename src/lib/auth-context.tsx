@@ -14,10 +14,8 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { isLoading, isAuthenticated } = useAuthStore((s) => ({
-    isLoading: s.isLoading,
-    isAuthenticated: s.isAuthenticated,
-  }));
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     initAuthListener();
