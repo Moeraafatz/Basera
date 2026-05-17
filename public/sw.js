@@ -4,6 +4,10 @@ const DYNAMIC_CACHE = "baseera-dynamic-v1";
 
 const STATIC_ASSETS = [
   "/",
+  "/text",
+  "/cv",
+  "/image",
+  "/video",
   "/manifest.json",
   "/favicon.ico",
   "/offline.html",
@@ -44,6 +48,12 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2|ttf)$/)) {
     event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Use network-first for HTML pages to avoid showing offline page on first load
+  if (url.pathname.endsWith("/") || url.pathname.endsWith(".html")) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
