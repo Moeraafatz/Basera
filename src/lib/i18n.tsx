@@ -17,8 +17,23 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 const arDict = arJson as Record<string, unknown>;
 const enDict = enJson as Record<string, unknown>;
 
+function getInitialLang(): Lang {
+  if (typeof window === "undefined") return "ar";
+  try {
+    const saved = localStorage.getItem("baseera-lang");
+    if (saved === "en" || saved === "ar") return saved;
+  } catch {}
+  return "ar";
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("ar");
+
+  // Sync initial state with localStorage on mount
+  useState(() => {
+    const initial = getInitialLang();
+    if (initial !== "ar") setLangState(initial);
+  });
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
