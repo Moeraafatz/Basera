@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Sparkles, Image, Video, FileText, Zap, BarChart3 } from "lucide-react";
+import { Menu, X, Sparkles, FileText, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslate, useLang } from "@/lib/i18n";
@@ -11,7 +11,7 @@ import { Logo } from "@/components/Logo";
 import { DiamondDot } from "@/components/ui/diamond-dot";
 
 const ICONS = {
-  Sparkles, Image, Video, FileText,
+  Sparkles, FileText,
 };
 
 export function Navbar() {
@@ -31,9 +31,6 @@ export function Navbar() {
     { href: "/", label: t("nav.home"), icon: Zap },
     { href: "/text", label: t("nav.text"), icon: Sparkles },
     { href: "/cv", label: t("nav.cv"), icon: FileText },
-    { href: "/image", label: t("nav.image"), icon: Image },
-    { href: "/video", label: t("nav.video"), icon: Video },
-    { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
   ];
 
   return (
