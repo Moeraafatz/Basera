@@ -4,11 +4,10 @@ import { withErrorHandling, ApiError } from "@/lib/errors";
 import { rateLimiter, createRateLimitResponse } from "@/lib/rate-limiter";
 import { parseJsonBody, validateBody, required, isOneOf } from "@/lib/validation";
 import { logger } from "@/lib/logger";
-import { withQuotaCheck } from "@/lib/quota-middleware";
 import { createClient } from "@/lib/supabase/server";
 import { streamCompletion } from "@/lib/streaming";
 
-async function handler(req: NextRequest, userId: string) {
+async function handler(req: NextRequest) {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -107,28 +106,4 @@ async function handler(req: NextRequest, userId: string) {
   return NextResponse.json({ success: true, result, requestId, service }, { headers: rateResponse.headers });
 }
 
-async function rawHandler(req: NextRequest) {
-  const supabase = await createClient();
-  if (!supabase) {
-    return handler(req, "anonymous");
-  }
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return handler(req, "anonymous");
-  }
-
-  const body = await req.json().catch(() => null);
-  const type = body?.type;
-
-  let service: "text-generate" | "image-generate" | "video-generate" = "text-generate";
-  if (type === "image-prompt") service = "image-generate";
-  else if (type === "video-prompt") service = "video-generate";
-
-  return withQuotaCheck(handler, service)(req);
-}
-
-export const POST = withErrorHandling(rawHandler);
+export const POST = withErrorHandling(handler);

@@ -359,16 +359,10 @@ export const useCVStore = create<CVStore>()((set, get) => ({
 
   syncToSupabase: async () => {
     const supabase = createClient();
-    const user = useAuthStore.getState().user;
-    if (!supabase || !user) return;
+    if (!supabase) return;
 
     set({ isSyncing: true });
     const state = get();
-    const { data: existing } = await supabase
-      .from("cvs")
-      .select("id")
-      .eq("user_id", user.id)
-      .limit(1);
 
     const cvData = {
       personal_info: state.data.personal,
@@ -383,25 +377,19 @@ export const useCVStore = create<CVStore>()((set, get) => ({
       template_id: state.selectedTemplate,
     };
 
-    if (existing && existing.length > 0) {
-      await supabase.from("cvs").update(cvData).eq("id", existing[0].id);
-    } else {
-      await supabase.from("cvs").insert({ user_id: user.id, ...cvData });
-    }
+    await supabase.from("cvs").insert(cvData);
 
     set({ isSyncing: false });
   },
 
   loadFromSupabase: async () => {
     const supabase = createClient();
-    const user = useAuthStore.getState().user;
-    if (!supabase || !user) return;
+    if (!supabase) return;
 
     set({ isSyncing: true });
     const { data } = await supabase
       .from("cvs")
       .select("*")
-      .eq("user_id", user.id)
       .order("updated_at", { ascending: false })
       .limit(1);
 

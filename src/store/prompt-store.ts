@@ -137,14 +137,12 @@ export const usePromptStore = create<PromptStore>()((set, get) => ({
 
   syncToSupabase: async () => {
     const supabase = createClient();
-    const user = useAuthStore.getState().user;
-    if (!supabase || !user) return;
+    if (!supabase) return;
 
     set({ isSyncing: true });
     const state = get();
 
     await supabase.from("prompts").insert({
-      user_id: user.id,
       service: "text",
       input: state.inputText,
       output: state.outputText,
@@ -158,14 +156,12 @@ export const usePromptStore = create<PromptStore>()((set, get) => ({
 
   loadFromSupabase: async () => {
     const supabase = createClient();
-    const user = useAuthStore.getState().user;
-    if (!supabase || !user) return;
+    if (!supabase) return;
 
     set({ isSyncing: true });
     const { data } = await supabase
       .from("prompts")
       .select("*")
-      .eq("user_id", user.id)
       .eq("service", "text")
       .order("created_at", { ascending: false })
       .limit(1);

@@ -4,10 +4,8 @@ import { withErrorHandling, ApiError } from "@/lib/errors";
 import { rateLimiter, createRateLimitResponse } from "@/lib/rate-limiter";
 import { parseJsonBody, validateBody, required, optional, isOneOf, isString } from "@/lib/validation";
 import { logger } from "@/lib/logger";
-import { withQuotaCheck } from "@/lib/quota-middleware";
-import { createClient } from "@/lib/supabase/server";
 
-async function handler(req: NextRequest, userId: string) {
+async function handler(req: NextRequest) {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -86,24 +84,7 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any text before or afte
   const duration = Date.now() - startTime;
   logger.requestEnd(requestId, "POST", "/api/cv/analyze", 200, duration);
 
-  return NextResponse.json({ success: true, result: parsedResult, requestId, userId }, { headers: rateResponse.headers });
+  return NextResponse.json({ success: true, result: parsedResult, requestId }, { headers: rateResponse.headers });
 }
 
-async function rawHandler(req: NextRequest) {
-  const supabase = await createClient();
-  if (!supabase) {
-    return handler(req, "anonymous");
-  }
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return handler(req, "anonymous");
-  }
-
-  return withQuotaCheck(handler, "cv-analyze")(req);
-}
-
-export const POST = withErrorHandling(rawHandler);
+export const POST = withErrorHandling(handler);

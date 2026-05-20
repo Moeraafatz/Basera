@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, createContext, useContext, type ReactNode } from "react";
-import { useAuthStore, initAuthListener } from "@/store/auth-store";
+import { createContext, useContext, type ReactNode } from "react";
 
 interface AuthContextValue {
   isLoading: boolean;
@@ -9,20 +8,13 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue>({
-  isLoading: true,
+  isLoading: false,
   isAuthenticated: false,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const isLoading = useAuthStore((s) => s.isLoading);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
-  useEffect(() => {
-    initAuthListener();
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ isLoading, isAuthenticated }}>
+    <AuthContext.Provider value={{ isLoading: false, isAuthenticated: false }}>
       {children}
     </AuthContext.Provider>
   );

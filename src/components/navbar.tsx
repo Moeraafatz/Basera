@@ -3,15 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Sparkles, Image, Video, FileText, Zap, BarChart3, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, Sparkles, Image, Video, FileText, Zap, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslate, useLang } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import { DiamondDot } from "@/components/ui/diamond-dot";
-import { Button } from "@/components/ui/button";
-import { UserMenu } from "@/components/auth/user-menu";
-import { useAuthStore } from "@/store/auth-store";
 
 const ICONS = {
   Sparkles, Image, Video, FileText,
@@ -23,33 +20,12 @@ export function Navbar() {
   const pathname = usePathname();
   const t = useTranslate();
   const lang = useLang();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const userId = useAuthStore((s) => s.user?.id);
-  const userEmail = useAuthStore((s) => s.user?.email);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-    let cancelled = false;
-    async function checkAdmin() {
-      const supabase = (await import("@/lib/supabase/client")).createClient();
-      if (!supabase || cancelled) return;
-      const { data: role } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .single();
-      if (!cancelled) setIsAdmin(role?.role === "admin");
-    }
-    checkAdmin();
-    return () => { cancelled = true; };
-  }, [userId]);
 
   const NAV_LINKS = [
     { href: "/", label: t("nav.home"), icon: Zap },
@@ -59,13 +35,6 @@ export function Navbar() {
     { href: "/video", label: t("nav.video"), icon: Video },
     { href: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
   ];
-
-  const AUTH_LINKS = isAuthenticated
-    ? [
-        { href: "/dashboard", label: t("nav.dashboard"), icon: BarChart3 },
-        ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: BarChart3 }] : []),
-      ]
-    : [];
 
   return (
     <nav className={cn(
@@ -84,7 +53,7 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
-            {[...NAV_LINKS, ...AUTH_LINKS].map((link) => {
+            {NAV_LINKS.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
               return (
@@ -109,25 +78,6 @@ export function Navbar() {
               );
             })}
             <LanguageSwitcher />
-
-            {isAuthenticated ? (
-              <UserMenu />
-            ) : (
-              <div className="flex items-center gap-2 mr-1">
-                <Link href="/login">
-                  <Button variant="ghost" size="sm" className="gap-1.5">
-                    <LogIn className="size-3.5" />
-                    {t("nav.login")}
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button size="sm" className="gap-1.5">
-                    <UserPlus className="size-3.5" />
-                    {t("nav.signup")}
-                  </Button>
-                </Link>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
@@ -145,7 +95,7 @@ export function Navbar() {
 
       {mobileOpen && (
         <div className="md:hidden border-t bg-background px-4 py-4 space-y-1">
-          {[...NAV_LINKS, ...AUTH_LINKS].map((link) => {
+          {NAV_LINKS.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
             return (
@@ -166,38 +116,7 @@ export function Navbar() {
             );
           })}
 
-          <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-700 space-y-2">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="flex-1">
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    <BarChart3 className="size-4" />
-                    {t("nav.dashboard")}
-                  </Button>
-                </Link>
-                <Link href="/profile" onClick={() => setMobileOpen(false)} className="flex-1">
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    {t("nav.profile")}
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login" onClick={() => setMobileOpen(false)} className="flex-1">
-                  <Button variant="outline" className="w-full gap-2">
-                    <LogIn className="size-4" />
-                    {t("nav.login")}
-                  </Button>
-                </Link>
-                <Link href="/signup" onClick={() => setMobileOpen(false)} className="flex-1">
-                  <Button className="w-full gap-2">
-                    <UserPlus className="size-4" />
-                    {t("nav.signup")}
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
+          
         </div>
       )}
     </nav>
