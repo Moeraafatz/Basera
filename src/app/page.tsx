@@ -1,17 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { motion, useInView } from "framer-motion";
 import {
   Wand2, Sparkles, Image as ImageIcon, Video, FileText, BarChart3,
-  Zap, ArrowLeft, Bot, Globe, Infinity, Check, ChevronLeft, ChevronRight,
+  Zap, ArrowLeft, Bot, Globe, Infinity, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslate, useLang } from "@/lib/i18n";
-import { DiamondDot } from "@/components/ui/diamond-dot";
-
-type Level = "simple" | "advanced" | "expert";
 
 const CATEGORIES = [
   { id: "content", labelAr: "محتوى", labelEn: "Content" },
@@ -35,7 +31,7 @@ const BENEFITS = [
   { icon: Zap, titleAr: "بدون تسجيل", titleEn: "No Signup", descAr: "ابدأ فوراً بدون الحاجة لإنشاء حساب", descEn: "Start instantly without creating an account" },
 ];
 
-function generatePrompt(input: string, level: Level, category: string): string {
+function generatePrompt(input: string, level: string, category: string): string {
   if (!input.trim()) return "";
   const categoryMap: Record<string, string> = {
     content: "Content Creation",
@@ -44,28 +40,17 @@ function generatePrompt(input: string, level: Level, category: string): string {
     creative: "Creative Writing",
   };
   const fullCategory = categoryMap[category] || "Content Creation";
-  const prefixes: Record<Level, string> = {
+  const prefixes: Record<string, string> = {
     simple: "You are a helpful AI assistant.",
     advanced: "You are a highly skilled AI expert with deep domain knowledge.",
     expert: "You are a world-class specialist and thought leader.",
   };
-  const detail: Record<Level, string> = {
+  const detail: Record<string, string> = {
     simple: `TASK: ${input}\n\nProvide a concise answer under 200 words.`,
     advanced: `TASK: ${input}\n\nProvide a comprehensive response with clear sections and examples.`,
     expert: `ROLE: Senior specialist\nTASK: ${input}\n\nDeliver an exceptionally detailed response with multi-angle analysis.`,
   };
-  return `${prefixes[level]}\n\nContext: ${fullCategory}\n\n${detail[level]}`;
-}
-
-function SlideSection({ children, className = "", id = "" }: { children: React.ReactNode; className?: string; id?: string }) {
-  return (
-    <section
-      id={id}
-      className={`min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden ${className}`}
-    >
-      {children}
-    </section>
-  );
+  return `${prefixes[level] || prefixes.simple}\n\nContext: ${fullCategory}\n\n${detail[level] || detail.simple}`;
 }
 
 export default function HomePage() {
@@ -73,50 +58,9 @@ export default function HomePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("content");
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = slides.findIndex((s) => s.id === entry.target.id);
-            if (index !== -1) setCurrentSlide(index);
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    ["hero", "tools", "benefits", "cta"].forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const heroRef = useRef(null);
-  const demoRef = useRef(null);
-  const toolsRef = useRef(null);
-  const benefitsRef = useRef(null);
-  const ctaRef = useRef(null);
-
-  const heroInView = useInView(heroRef, { once: true, margin: "-10%" });
-  const demoInView = useInView(demoRef, { once: true, margin: "-10%" });
-  const toolsInView = useInView(toolsRef, { once: true, margin: "-10%" });
-  const benefitsInView = useInView(benefitsRef, { once: true, margin: "-10%" });
-  const ctaInView = useInView(ctaRef, { once: true, margin: "-10%" });
 
   const t = useTranslate();
   const lang = useLang();
-
-  const slides = [
-    { id: "hero", inView: heroInView },
-    { id: "tools", inView: toolsInView },
-    { id: "benefits", inView: benefitsInView },
-    { id: "cta", inView: ctaInView },
-  ];
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
@@ -140,88 +84,48 @@ export default function HomePage() {
     toast.success(lang === "ar" ? "تم التوليد!" : "Generated!");
   };
 
-  const scrollToSection = (index: number) => {
-    const sectionIds = ["hero", "tools", "benefits", "cta"];
-    document.getElementById(sectionIds[index])?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <div className="min-h-screen bg-ivory-100 relative">
-      {/* Progress Dots */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => scrollToSection(i)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              currentSlide === i ? "bg-book-cloth scale-125" : "bg-ivory-300 hover:bg-ivory-400"
-            }`}
-            aria-label={`Go to section ${i + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* SLIDE 1: Hero - Bold Typography */}
-      <SlideSection id="hero" className="bg-gradient-to-br from-ivory-100 via-ivory-200/50 to-manilla/20">
+    <div className="min-h-screen bg-ivory-100">
+      {/* HERO SECTION */}
+      <section className="relative pt-24 pb-20 bg-gradient-to-br from-ivory-100 via-ivory-200/50 to-manilla/20">
         <div className="absolute inset-0 geo-pattern opacity-50" />
         
-        <div className="relative max-w-6xl mx-auto w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`text-center ${lang === "ar" ? "lg:text-right" : "lg:text-left"}`}
-          >
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`text-center ${lang === "ar" ? "lg:text-right" : "lg:text-left"}`}>
             {/* FREE Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={heroInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg mb-8 shadow-lg shadow-green-500/25"
-            >
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg mb-8 shadow-lg shadow-green-500/25">
               <Infinity className="h-5 w-5" />
               <span>{lang === "ar" ? "مجاناً ١٠٠٪" : "100% FREE"}</span>
               <span className="opacity-70 text-sm font-normal mx-1">|</span>
               <span className="opacity-80 text-sm font-normal">{lang === "ar" ? "للأبد" : "Forever"}</span>
-            </motion.div>
+            </div>
 
-            {/* Main Title - Editorial Style */}
+            {/* Main Title */}
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold text-slate-900 mb-6 leading-[1.1] tracking-tight font-display-ar">
               {lang === "ar" ? (
-                <>
-                  بصيرة<span className="text-book-cloth">.</span>
-                </>
+                <>بصيرة<span className="text-book-cloth">.</span></>
               ) : (
-                <>
-                  Baseera<span className="text-book-cloth">.</span>
-                </>
+                <>Baseera<span className="text-book-cloth">.</span></>
               )}
             </h1>
 
-            {/* Tagline - Large & Bold */}
             <p className="text-2xl sm:text-3xl text-slate-700 mb-4 font-medium">
-              {lang === "ar" 
-                ? "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي" 
-                : "Transform Ideas into Professional AI Prompts"}
+              {lang === "ar" ? "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي" : "Transform Ideas into Professional AI Prompts"}
             </p>
 
-            {/* Description */}
             <p className="text-lg text-slate-500 mb-10 max-w-xl leading-relaxed">
               {lang === "ar"
                 ? "منصة عربية مجانية ١٠٠٪ لتوليد وتحسين أوامر الذكاء الاصطناعي في كل المجالات"
                 : "A 100% free Arabic platform for generating and enhancing AI prompts in every field"}
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-              <Link href="/text">
-                <button className="bg-slate-900 text-white h-14 px-10 rounded-2xl text-base font-semibold flex items-center gap-3 hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20">
-                  <Wand2 className="h-5 w-5" />
-                  {lang === "ar" ? "ابدأ الآن مجاناً" : "Start Free Now"}
-                  <ArrowLeft className={`h-4 w-4 ${lang === "ar" ? "" : "rotate-180"}`} />
-                </button>
-              </Link>
-            </div>
+            <Link href="/text">
+              <button className="bg-slate-900 text-white h-14 px-10 rounded-2xl text-base font-semibold flex items-center gap-3 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 mx-auto lg:mx-0">
+                <Wand2 className="h-5 w-5" />
+                {lang === "ar" ? "ابدأ الآن مجاناً" : "Start Free Now"}
+                <ArrowLeft className={`h-4 w-4 ${lang === "ar" ? "" : "rotate-180"}`} />
+              </button>
+            </Link>
 
             {/* Stats */}
             <div className="flex flex-wrap gap-8 mt-12 justify-center lg:justify-start">
@@ -238,47 +142,23 @@ export default function HomePage() {
                 <p className="text-sm text-slate-500">{lang === "ar" ? "تسجيل مطلوب" : "No Signup Required"}</p>
               </div>
             </div>
-          </motion.div>
-
-          {/* Decorative Element */}
-          <motion.div
-            initial={{ opacity: 0, rotate: -45 }}
-            animate={heroInView ? { opacity: 1, rotate: -45 } : {}}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="absolute -left-20 top-1/4 w-40 h-40 border-[3px] border-book-cloth/20 rounded-full hidden lg:block"
-          />
-          <motion.div
-            initial={{ opacity: 0, rotate: 45 }}
-            animate={heroInView ? { opacity: 1, rotate: 45 } : {}}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="absolute -left-10 bottom-1/4 w-24 h-24 border-[2px] border-kraft/30 rounded-full hidden lg:block"
-          />
+          </div>
         </div>
-      </SlideSection>
+      </section>
 
-      {/* SLIDE 2: Interactive Demo */}
-      <SlideSection className="bg-white">
-        <div className="max-w-4xl mx-auto w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={demoInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-8"
-          >
+      {/* DEMO SECTION */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
               {lang === "ar" ? "جرّب الآن" : "Try It Now"}
             </h2>
             <p className="text-slate-500">
               {lang === "ar" ? "أدخل فكرتك وشاهد النتيجة فوراً" : "Enter your idea and see results instantly"}
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={demoInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.1, duration: 0.6 }}
-            className="bg-ivory-100 rounded-3xl border border-ivory-300 p-6 sm:p-8 shadow-2xl"
-          >
+          <div className="bg-ivory-100 rounded-3xl border border-ivory-300 p-6 sm:p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
                 <Wand2 className="h-6 w-6 text-white" />
@@ -290,10 +170,10 @@ export default function HomePage() {
             </div>
 
             <textarea
-              placeholder={lang === "ar" ? "صِف مهمتك... مثال: أكتب رسالة تعريفية لصفحتي الشخصية" : "Describe your task... Example: Write an bio for my LinkedIn profile"}
+              placeholder={lang === "ar" ? "صِف مهمتك..." : "Describe your task..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="w-full min-h-[100px] rounded-xl bg-white border border-ivory-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-book-cloth focus:ring-2 focus:ring-book-cloth/20 resize-none mb-4"
+              className="w-full min-h-[100px] rounded-xl bg-white border border-ivory-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-book-cloth resize-none mb-4"
               dir={lang === "ar" ? "rtl" : "ltr"}
             />
 
@@ -329,105 +209,69 @@ export default function HomePage() {
             </button>
 
             {output && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 rounded-xl bg-white border border-ivory-300 p-4"
-              >
+              <div className="mt-4 rounded-xl bg-white border border-ivory-300 p-4">
                 <p className="text-xs text-slate-400 mb-2">{lang === "ar" ? "النتيجة:" : "Result:"}</p>
                 <pre className="text-sm text-slate-800 whitespace-pre-wrap font-mono" dir="ltr">{output}</pre>
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
         </div>
-      </SlideSection>
+      </section>
 
-      {/* SLIDE 3: Tools Grid - Asymmetric */}
-      <SlideSection id="tools" className="bg-gradient-to-b from-ivory-100 to-ivory-200/30">
-        <div className="max-w-6xl mx-auto w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={toolsInView ? { opacity: 1, y: 0 } : {}}
-            className="text-center mb-12"
-          >
+      {/* TOOLS SECTION */}
+      <section className="py-20 bg-gradient-to-b from-ivory-100 to-ivory-200/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
               {lang === "ar" ? "أدوات بصيرة" : "Baseera Tools"}
             </h2>
             <p className="text-lg text-slate-500 max-w-xl mx-auto">
-              {lang === "ar" 
-                ? "كل ما تحتاجه للعمل مع الذكاء الاصطناعي - في مكان واحد" 
-                : "Everything you need to work with AI - in one place"}
+              {lang === "ar" ? "كل ما تحتاجه للعمل مع الذكاء الاصطناعي - في مكان واحد" : "Everything you need to work with AI - in one place"}
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {TOOLS.map((tool, i) => {
+            {TOOLS.map((tool) => {
               const Icon = tool.icon;
-              const isLarge = i === 0;
-              
               return (
                 <Link key={tool.href} href={tool.href}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={toolsInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: i * 0.08, duration: 0.5 }}
-                    className={`group bg-white rounded-2xl p-6 border border-ivory-300 hover:border-book-cloth/50 transition-all hover:shadow-xl hover:-translate-y-1 ${
-                      isLarge ? "lg:col-span-2 lg:row-span-2" : ""
-                    }`}
-                  >
-                    <div className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-book-cloth to-kraft text-white mb-4 ${
-                      isLarge ? "w-16 h-16" : "w-12 h-12"
-                    }`}>
-                      <Icon className={isLarge ? "h-8 w-8" : "h-5 w-5"} />
+                  <div className="group bg-white rounded-2xl p-6 border border-ivory-300 hover:border-book-cloth/50 transition-all hover:shadow-xl hover:-translate-y-1">
+                    <div className="flex items-center justify-center rounded-xl bg-gradient-to-br from-book-cloth to-kraft text-white mb-4 w-12 h-12">
+                      <Icon className="h-5 w-5" />
                     </div>
-                    <h3 className={`font-semibold text-slate-900 mb-2 group-hover:text-book-cloth transition-colors ${
-                      isLarge ? "text-xl" : "text-base"
-                    }`}>
+                    <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-book-cloth transition-colors">
                       {lang === "ar" ? tool.nameAr : tool.nameEn}
                     </h3>
                     <p className="text-sm text-slate-500 leading-relaxed">
                       {lang === "ar" ? tool.descAr : tool.descEn}
                     </p>
-                  </motion.div>
+                  </div>
                 </Link>
               );
             })}
           </div>
         </div>
-      </SlideSection>
+      </section>
 
-      {/* SLIDE 4: Benefits - Large Cards */}
-      <SlideSection className="bg-slate-900 text-white">
+      {/* BENEFITS SECTION */}
+      <section className="py-20 bg-slate-900 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-900" />
         
-        <div className="relative max-w-5xl mx-auto w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={benefitsInView ? { opacity: 1, y: 0 } : {}}
-            className="text-center mb-12"
-          >
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">
               {lang === "ar" ? "لماذا بصيرة؟" : "Why Baseera?"}
             </h2>
             <p className="text-lg text-slate-400 max-w-xl mx-auto">
-              {lang === "ar"
-                ? "منصة صُممت لخدمتك - مجاناً ودون أي تعقيدات"
-                : "A platform designed to serve you - free and without complications"}
+              {lang === "ar" ? "منصة صُممت لخدمتك - مجاناً ودون أي تعقيدات" : "A platform designed to serve you - free and without complications"}
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {BENEFITS.map((benefit, i) => {
+            {BENEFITS.map((benefit) => {
               const Icon = benefit.icon;
-              
               return (
-                <motion.div
-                  key={benefit.titleEn}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={benefitsInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="group bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-book-cloth/50 transition-all hover:bg-slate-800"
-                >
+                <div className="group bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-book-cloth/50 transition-all hover:bg-slate-800">
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-book-cloth to-kraft flex items-center justify-center">
                       <Icon className="h-6 w-6 text-white" />
@@ -441,55 +285,50 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
         </div>
-      </SlideSection>
+      </section>
 
-      {/* SLIDE 5: Final CTA */}
-      <SlideSection className="bg-gradient-to-br from-book-cloth to-kraft text-white">
+      {/* CTA SECTION */}
+      <section className="py-20 bg-gradient-to-br from-book-cloth to-kraft text-white">
         <div className="absolute inset-0 geo-pattern opacity-20" />
         
-        <div className="relative text-center max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
-          >
-            <h2 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight">
-              {lang === "ar" ? "ابدأ الآن - مجاناً" : "Start Now - It's Free"}
-            </h2>
-            <p className="text-xl text-white/80 mb-10 leading-relaxed">
-              {lang === "ar"
-                ? "لا حاجة للتسجيل أو الدفع. فقط أدخل فكرتك وابدأ في تحسين أوامرك للذكاء الاصطناعي فوراً."
-                : "No registration or payment needed. Just enter your idea and start improving your AI prompts instantly."}
-            </p>
+        <div className="relative text-center max-w-3xl mx-auto px-4">
+          <h2 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight">
+            {lang === "ar" ? "ابدأ الآن - مجاناً" : "Start Now - It's Free"}
+          </h2>
+          <p className="text-xl text-white/80 mb-10 leading-relaxed">
+            {lang === "ar"
+              ? "لا حاجة للتسجيل أو الدفع. فقط أدخل فكرتك وابدأ."
+              : "No registration or payment needed. Just enter your idea and start."}
+          </p>
 
-            <Link href="/text">
-              <button className="bg-white text-slate-900 h-16 px-12 rounded-2xl text-lg font-bold flex items-center gap-3 mx-auto hover:scale-105 transition-all shadow-2xl">
-                <Wand2 className="h-5 w-5" />
-                {lang === "ar" ? "ابدأ مجاناً الآن" : "Start Free Now"}
-              </button>
-            </Link>
+          <Link href="/text">
+            <button className="bg-white text-slate-900 h-16 px-12 rounded-2xl text-lg font-bold flex items-center gap-3 mx-auto hover:scale-105 transition-all shadow-2xl">
+              <Wand2 className="h-5 w-5" />
+              {lang === "ar" ? "ابدأ مجاناً الآن" : "Start Free Now"}
+            </button>
+          </Link>
 
-            <div className="flex items-center justify-center gap-6 mt-12 text-white/60 text-sm">
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                <span>{lang === "ar" ? "بدون تكاليف" : "No Costs"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                <span>{lang === "ar" ? "بدون تسجيل" : "No Signup"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                <span>{lang === "ar" ? "بدون حدود" : "No Limits"}</span>
-              </div>
+          <div className="flex items-center justify-center gap-6 mt-12 text-white/60 text-sm">
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              <span>{lang === "ar" ? "بدون تكاليف" : "No Costs"}</span>
             </div>
-          </motion.div>
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              <span>{lang === "ar" ? "بدون تسجيل" : "No Signup"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              <span>{lang === "ar" ? "بدون حدود" : "No Limits"}</span>
+            </div>
+          </div>
         </div>
-      </SlideSection>
+      </section>
     </div>
   );
 }
