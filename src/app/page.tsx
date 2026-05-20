@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import {
   Wand2, Sparkles, Image as ImageIcon, Video, FileText, BarChart3,
-  CheckCircle, Zap, Loader2, ArrowLeft, Bot, Globe, Edit3, FileSearch, CreditCard, Infinity,
+  Zap, ArrowLeft, Bot, Globe, Infinity, Check, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslate, useLang } from "@/lib/i18n";
-import { WaveDivider } from "@/components/ui/wave-divider";
 import { DiamondDot } from "@/components/ui/diamond-dot";
 
 type Level = "simple" | "advanced" | "expert";
@@ -21,19 +20,19 @@ const CATEGORIES = [
   { id: "creative", labelAr: "إبداعي", labelEn: "Creative" },
 ] as const;
 
-const TOOLS_BASE = [
-  { href: "/text", icon: Sparkles, nameAr: "Prompt Enhancer", nameEn: "Prompt Enhancer", descAr: "Transform your ideas into professional prompts for any AI model", descEn: "Transform your ideas into professional prompts for any AI model", gradient: "from-slate-900 to-slate-700" },
-  { href: "/cv", icon: FileText, nameAr: "CV Analyzer", nameEn: "CV Analyzer", descAr: "Analyze, optimize, and edit your resume for any job market", descEn: "Analyze, optimize, and edit your resume for any job market", gradient: "from-slate-800 to-slate-600" },
-  { href: "/image", icon: ImageIcon, nameAr: "Image Prompts", nameEn: "Image Prompts", descAr: "Create powerful prompts for AI image generation", descEn: "Create powerful prompts for AI image generation", gradient: "from-slate-700 to-slate-500" },
-  { href: "/video", icon: Video, nameAr: "Video Prompts", nameEn: "Video Prompts", descAr: "Professional prompts for AI video generation", descEn: "Professional prompts for AI video generation", gradient: "from-slate-800 to-slate-600" },
-  { href: "/analytics", icon: BarChart3, nameAr: "Analytics", nameEn: "Analytics", descAr: "Track usage, compare models, and estimate costs", descEn: "Track usage, compare models, and estimate costs", gradient: "from-slate-600 to-slate-400" },
+const TOOLS = [
+  { href: "/text", icon: Sparkles, nameAr: "محسّن الأوامر", nameEn: "Prompt Enhancer", descAr: "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي", descEn: "Transform your ideas into professional AI prompts" },
+  { href: "/cv", icon: FileText, nameAr: "تحسين السيرة الذاتية", nameEn: "CV Optimizer", descAr: "حلل وحسّن سيرتك الذاتية لأي سوق عمل", descEn: "Analyze and optimize your CV for any job market" },
+  { href: "/image", icon: ImageIcon, nameAr: "أوامر الصور", nameEn: "Image Prompts", descAr: "أنشئ أوامر قوية لتوليد الصور بالذكاء الاصطناعي", descEn: "Create powerful prompts for AI image generation" },
+  { href: "/video", icon: Video, nameAr: "أوامر الفيديو", nameEn: "Video Prompts", descAr: "أوامر احترافية لتوليد الفيديو بالذكاء الاصطناعي", descEn: "Professional prompts for AI video generation" },
+  { href: "/analytics", icon: BarChart3, nameAr: "التحليلات", nameEn: "Analytics", descAr: "تتبع الاستخدام وقارن بين النماذج", descEn: "Track usage and compare models" },
 ];
 
-const FEATURES_BASE = [
-  { icon: Infinity, nameAr: "مجاناً تماماً", nameEn: "100% Free", descAr: "استخدم جميع الأدوات بدون أي تكاليف أو حدود - للأبد", descEn: "Use all tools with no costs or limits - forever" },
-  { icon: Bot, nameAr: "يدعم جميع النماذج", nameEn: "All AI Models", descAr: "يعمل مع جميع نماذج الذكاء الاصطناعي الكبرى", descEn: "Works with all major AI models" },
-  { icon: Globe, nameAr: "يدعم كل المجالات", nameEn: "All Fields", descAr: "أوامر للمحتوى والأعمال والبرمجة والإبداع والتسويق", descEn: "Prompts for content, business, coding, creative, marketing" },
-  { icon: FileSearch, nameAr: "تحسين السير الذاتية", nameEn: "CV Optimization", descAr: "حلل وحسّن سيرتك الذاتية لأي سوق عمل عالمي", descEn: "Analyze and improve your CV for any job market" },
+const BENEFITS = [
+  { icon: Infinity, titleAr: "مجاناً للأبد", titleEn: "Free Forever", descAr: "استخدم جميع الأدوات بدون أي تكاليف أو اشتراكات", descEn: "Use all tools with no costs or subscriptions" },
+  { icon: Globe, titleAr: "بالعربية", titleEn: "In Arabic", descAr: "واجهة وأدوات بالكامل باللغة العربية", descEn: "Interface and tools fully in Arabic" },
+  { icon: Bot, titleAr: "يدعم كل النماذج", titleEn: "All AI Models", descAr: "يعمل مع GPT, Claude, Gemini, Grok والمزيد", descEn: "Works with GPT, Claude, Gemini, Grok and more" },
+  { icon: Zap, titleAr: "بدون تسجيل", titleEn: "No Signup", descAr: "ابدأ فوراً بدون الحاجة لإنشاء حساب", descEn: "Start instantly without creating an account" },
 ];
 
 function generatePrompt(input: string, level: Level, category: string): string {
@@ -46,16 +45,27 @@ function generatePrompt(input: string, level: Level, category: string): string {
   };
   const fullCategory = categoryMap[category] || "Content Creation";
   const prefixes: Record<Level, string> = {
-    simple: "You are a helpful AI assistant. Your goal is to provide clear, concise, and practical responses.",
+    simple: "You are a helpful AI assistant.",
     advanced: "You are a highly skilled AI expert with deep domain knowledge.",
     expert: "You are a world-class specialist and thought leader.",
   };
   const detail: Record<Level, string> = {
     simple: `TASK: ${input}\n\nProvide a concise answer under 200 words.`,
-    advanced: `TASK: ${input}\n\nProvide a comprehensive response with clear sections, examples, and actionable recommendations.`,
-    expert: `ROLE: Senior specialist\nTASK: ${input}\n\nDeliver an exceptionally detailed response with multi-angle analysis, methodology, edge cases, and quality criteria.`,
+    advanced: `TASK: ${input}\n\nProvide a comprehensive response with clear sections and examples.`,
+    expert: `ROLE: Senior specialist\nTASK: ${input}\n\nDeliver an exceptionally detailed response with multi-angle analysis.`,
   };
   return `${prefixes[level]}\n\nContext: ${fullCategory}\n\n${detail[level]}`;
+}
+
+function SlideSection({ children, className = "", id = "" }: { children: React.ReactNode; className?: string; id?: string }) {
+  return (
+    <section
+      id={id}
+      className={`min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden ${className}`}
+    >
+      {children}
+    </section>
+  );
 }
 
 export default function HomePage() {
@@ -63,29 +73,50 @@ export default function HomePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [output, setOutput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("content");
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  const heroRef = useRef<HTMLElement>(null);
-  const toolsRef = useRef<HTMLElement>(null);
-  const featuresRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = slides.findIndex((s) => s.id === entry.target.id);
+            if (index !== -1) setCurrentSlide(index);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
 
-  const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
-  const toolsInView = useInView(toolsRef, { once: true, margin: "-100px" });
-  const featuresInView = useInView(featuresRef, { once: true, margin: "-100px" });
+    ["hero", "tools", "benefits", "cta"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const heroRef = useRef(null);
+  const demoRef = useRef(null);
+  const toolsRef = useRef(null);
+  const benefitsRef = useRef(null);
+  const ctaRef = useRef(null);
+
+  const heroInView = useInView(heroRef, { once: true, margin: "-10%" });
+  const demoInView = useInView(demoRef, { once: true, margin: "-10%" });
+  const toolsInView = useInView(toolsRef, { once: true, margin: "-10%" });
+  const benefitsInView = useInView(benefitsRef, { once: true, margin: "-10%" });
+  const ctaInView = useInView(ctaRef, { once: true, margin: "-10%" });
 
   const t = useTranslate();
   const lang = useLang();
 
-  const TOOLS = TOOLS_BASE.map((tool) => ({
-    ...tool,
-    name: lang === "ar" ? tool.nameAr : tool.nameEn,
-    desc: lang === "ar" ? tool.descAr : tool.descEn,
-  }));
-
-  const FEATURES = FEATURES_BASE.map((f) => ({
-    ...f,
-    name: lang === "ar" ? f.nameAr : f.nameEn,
-    desc: lang === "ar" ? f.descAr : f.descEn,
-  }));
+  const slides = [
+    { id: "hero", inView: heroInView },
+    { id: "tools", inView: toolsInView },
+    { id: "benefits", inView: benefitsInView },
+    { id: "cta", inView: ctaInView },
+  ];
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
@@ -109,306 +140,356 @@ export default function HomePage() {
     toast.success(lang === "ar" ? "تم التوليد!" : "Generated!");
   };
 
+  const scrollToSection = (index: number) => {
+    const sectionIds = ["hero", "tools", "benefits", "cta"];
+    document.getElementById(sectionIds[index])?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className="min-h-screen bg-[#FAFAF7]">
-      {/* Hero */}
-      <section ref={heroRef} className="relative pt-24 pb-20 overflow-hidden geo-pattern gradient-mesh">
+    <div className="min-h-screen bg-ivory-100 relative">
+      {/* Progress Dots */}
+      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3">
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToSection(i)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              currentSlide === i ? "bg-book-cloth scale-125" : "bg-ivory-300 hover:bg-ivory-400"
+            }`}
+            aria-label={`Go to section ${i + 1}`}
+          />
+        ))}
+      </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6 }}
-              className={`text-center ${lang === "ar" ? "lg:text-right" : "lg:text-left"}`}
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-green-700 text-sm mb-6 border border-green-200">
-                <Infinity className="h-4 w-4" />
-                <span className="font-semibold">{lang === "ar" ? "مجاناً ١٠٠٪ - بدون أي تكاليف" : "100% Free - No Costs"}</span>
-              </div>
-
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ivory-200/60 text-slate-600 text-sm mb-6">
-                <Zap className="h-3.5 w-3.5 text-book-cloth" />
-                <span>{lang === "ar" ? t("hero.models") : t("hero.models")}</span>
-              </div>
-
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 mb-4 leading-tight font-display-ar">
-                {lang === "ar" ? "بصيرة" : "Baseera"}
-              </h1>
-              <p className="text-xl sm:text-2xl text-slate-600 mb-3 hero-tagline">
-                {lang === "ar" ? "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي" : "Transform Ideas into Professional AI Prompts"}
-              </p>
-              <p className="text-base text-slate-500 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                {lang === "ar"
-                  ? "منصة شاملة لتحسين أوامر الذكاء الاصطناعي في كل مجال - النصوص، الصور، الفيديو، الكود، والسيرة الذاتية"
-                  : "A universal platform for enhancing AI prompts across every field — text, images, video, code, and CVs"}
-              </p>
-
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                <Link href="/text">
-                  <button className="bg-slate-900 text-white h-12 px-8 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-sm">
-                    <Wand2 className="h-4 w-4" />
-                    {t("hero.cta")}
-                    <ArrowLeft className={`h-4 w-4 ${lang === "ar" ? "" : "rotate-180"}`} />
-                  </button>
-                </Link>
-              </div>
-
-              <p className="mt-6 text-sm text-slate-400">
-                {lang === "ar" ? t("hero.stats") : t("hero.stats")}
-              </p>
-            </motion.div>
-
-            {/* Demo Board */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white rounded-3xl border border-ivory-300 shadow-xl p-6 min-h-[400px] grain-overlay card-depth"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
-                  <Wand2 className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <span className="text-slate-900 font-semibold text-sm block">
-                    {lang === "ar" ? "جرّب الآن" : "Try it now"}
-                  </span>
-                  <span className="text-slate-400 text-xs">
-                    {lang === "ar" ? "توليد فوري" : "Instant generation"}
-                  </span>
-                </div>
-              </div>
-
-              <textarea
-                placeholder={lang === "ar" ? "صِف مهمتك..." : "Describe your task..."}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="w-full min-h-[80px] rounded-xl bg-[#FAFAF7] border border-ivory-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-book-cloth focus:ring-1 focus:ring-book-cloth/30 resize-none mb-4 transition-colors"
-                dir={lang === "ar" ? "rtl" : "ltr"}
-              />
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                      selectedCategory === cat.id
-                        ? "bg-slate-900 text-white"
-                        : "bg-ivory-200 text-slate-500 hover:bg-ivory-300"
-                    }`}
-                  >
-                    {lang === "ar" ? cat.labelAr : cat.labelEn}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={handleGenerate}
-                disabled={!input.trim() || isGenerating}
-                className="bg-slate-900 text-white h-10 px-5 rounded-xl text-sm font-medium flex items-center gap-2 disabled:opacity-50 hover:bg-slate-800 transition-colors shadow-sm"
-              >
-                {isGenerating ? (
-                  <><span className="diamond-loading"><span /><span /><span /><span /></span>{t("common.generating")}</>
-                ) : (
-                  <><Wand2 className="h-4 w-4" />{t("common.generate")}</>
-                )}
-              </button>
-
-              <div className="mt-4 rounded-xl bg-[#FAFAF7] border border-ivory-300 p-4 min-h-[100px]">
-                {output ? (
-                  <pre className="text-sm text-slate-800 whitespace-pre-wrap font-mono" dir="ltr">{output}</pre>
-                ) : (
-                  <p className="text-slate-400 text-sm">
-                    {lang === "ar" ? "أدخل نصّاً واضغط توليد" : "Enter text and click Generate"}
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Wave Divider */}
-      <WaveDivider className="max-w-7xl mx-auto" />
-
-      {/* Tools */}
-      <section ref={toolsRef} className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* SLIDE 1: Hero - Bold Typography */}
+      <SlideSection id="hero" className="bg-gradient-to-br from-ivory-100 via-ivory-200/50 to-manilla/20">
+        <div className="absolute inset-0 geo-pattern opacity-50" />
+        
+        <div className="relative max-w-6xl mx-auto w-full">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={toolsInView ? { opacity: 1, y: 0 } : {}}
-            className="text-center mb-14"
+            initial={{ opacity: 0, y: 40 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className={`text-center ${lang === "ar" ? "lg:text-right" : "lg:text-left"}`}
           >
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                {lang === "ar" ? "أدواتنا" : "Our Tools"}
-              </h2>
-              <p className="text-slate-500">
-                {lang === "ar" ? "مجموعة متكاملة من أدوات تحسين الأوامر" : "A complete suite of AI prompt enhancement tools"}
-              </p>
+            {/* FREE Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={heroInView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg mb-8 shadow-lg shadow-green-500/25"
+            >
+              <Infinity className="h-5 w-5" />
+              <span>{lang === "ar" ? "مجاناً ١٠٠٪" : "100% FREE"}</span>
+              <span className="opacity-70 text-sm font-normal mx-1">|</span>
+              <span className="opacity-80 text-sm font-normal">{lang === "ar" ? "للأبد" : "Forever"}</span>
+            </motion.div>
+
+            {/* Main Title - Editorial Style */}
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold text-slate-900 mb-6 leading-[1.1] tracking-tight font-display-ar">
+              {lang === "ar" ? (
+                <>
+                  بصيرة<span className="text-book-cloth">.</span>
+                </>
+              ) : (
+                <>
+                  Baseera<span className="text-book-cloth">.</span>
+                </>
+              )}
+            </h1>
+
+            {/* Tagline - Large & Bold */}
+            <p className="text-2xl sm:text-3xl text-slate-700 mb-4 font-medium">
+              {lang === "ar" 
+                ? "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي" 
+                : "Transform Ideas into Professional AI Prompts"}
+            </p>
+
+            {/* Description */}
+            <p className="text-lg text-slate-500 mb-10 max-w-xl leading-relaxed">
+              {lang === "ar"
+                ? "منصة عربية مجانية ١٠٠٪ لتوليد وتحسين أوامر الذكاء الاصطناعي في كل المجالات"
+                : "A 100% free Arabic platform for generating and enhancing AI prompts in every field"}
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+              <Link href="/text">
+                <button className="bg-slate-900 text-white h-14 px-10 rounded-2xl text-base font-semibold flex items-center gap-3 hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20">
+                  <Wand2 className="h-5 w-5" />
+                  {lang === "ar" ? "ابدأ الآن مجاناً" : "Start Free Now"}
+                  <ArrowLeft className={`h-4 w-4 ${lang === "ar" ? "" : "rotate-180"}`} />
+                </button>
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-8 mt-12 justify-center lg:justify-start">
+              <div className="text-center lg:text-right">
+                <p className="text-3xl font-bold text-slate-900">٥+</p>
+                <p className="text-sm text-slate-500">{lang === "ar" ? "أدوات متاحة" : "Tools Available"}</p>
+              </div>
+              <div className="text-center lg:text-right">
+                <p className="text-3xl font-bold text-slate-900">∞</p>
+                <p className="text-sm text-slate-500">{lang === "ar" ? "استخدام مجاني" : "Unlimited Usage"}</p>
+              </div>
+              <div className="text-center lg:text-right">
+                <p className="text-3xl font-bold text-slate-900">٠</p>
+                <p className="text-sm text-slate-500">{lang === "ar" ? "تسجيل مطلوب" : "No Signup Required"}</p>
+              </div>
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Decorative Element */}
+          <motion.div
+            initial={{ opacity: 0, rotate: -45 }}
+            animate={heroInView ? { opacity: 1, rotate: -45 } : {}}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="absolute -left-20 top-1/4 w-40 h-40 border-[3px] border-book-cloth/20 rounded-full hidden lg:block"
+          />
+          <motion.div
+            initial={{ opacity: 0, rotate: 45 }}
+            animate={heroInView ? { opacity: 1, rotate: 45 } : {}}
+            transition={{ delay: 0.6, duration: 0.8 }}
+            className="absolute -left-10 bottom-1/4 w-24 h-24 border-[2px] border-kraft/30 rounded-full hidden lg:block"
+          />
+        </div>
+      </SlideSection>
+
+      {/* SLIDE 2: Interactive Demo */}
+      <SlideSection className="bg-white">
+        <div className="max-w-4xl mx-auto w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={demoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+              {lang === "ar" ? "جرّب الآن" : "Try It Now"}
+            </h2>
+            <p className="text-slate-500">
+              {lang === "ar" ? "أدخل فكرتك وشاهد النتيجة فوراً" : "Enter your idea and see results instantly"}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={demoInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="bg-ivory-100 rounded-3xl border border-ivory-300 p-6 sm:p-8 shadow-2xl"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+                <Wand2 className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <span className="text-slate-900 font-semibold block">بصيرة</span>
+                <span className="text-slate-400 text-xs">{lang === "ar" ? "محسّن الأوامر بالذكاء الاصطناعي" : "AI Prompt Enhancer"}</span>
+              </div>
+            </div>
+
+            <textarea
+              placeholder={lang === "ar" ? "صِف مهمتك... مثال: أكتب رسالة تعريفية لصفحتي الشخصية" : "Describe your task... Example: Write an bio for my LinkedIn profile"}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="w-full min-h-[100px] rounded-xl bg-white border border-ivory-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-book-cloth focus:ring-2 focus:ring-book-cloth/20 resize-none mb-4"
+              dir={lang === "ar" ? "rtl" : "ltr"}
+            />
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedCategory === cat.id
+                      ? "bg-slate-900 text-white"
+                      : "bg-white text-slate-500 border border-ivory-300 hover:border-slate-400"
+                  }`}
+                >
+                  {lang === "ar" ? cat.labelAr : cat.labelEn}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              disabled={!input.trim() || isGenerating}
+              className="bg-book-cloth text-white h-12 px-8 rounded-xl text-base font-semibold flex items-center gap-2 disabled:opacity-50 hover:bg-kraft transition-all w-full justify-center"
+            >
+              {isGenerating ? (
+                <span className="diamond-loading"><span /><span /><span /><span /></span>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4" />
+                  {lang === "ar" ? "توليد الأمر" : "Generate Prompt"}
+                </>
+              )}
+            </button>
+
+            {output && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 rounded-xl bg-white border border-ivory-300 p-4"
+              >
+                <p className="text-xs text-slate-400 mb-2">{lang === "ar" ? "النتيجة:" : "Result:"}</p>
+                <pre className="text-sm text-slate-800 whitespace-pre-wrap font-mono" dir="ltr">{output}</pre>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+      </SlideSection>
+
+      {/* SLIDE 3: Tools Grid - Asymmetric */}
+      <SlideSection id="tools" className="bg-gradient-to-b from-ivory-100 to-ivory-200/30">
+        <div className="max-w-6xl mx-auto w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={toolsInView ? { opacity: 1, y: 0 } : {}}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+              {lang === "ar" ? "أدوات بصيرة" : "Baseera Tools"}
+            </h2>
+            <p className="text-lg text-slate-500 max-w-xl mx-auto">
+              {lang === "ar" 
+                ? "كل ما تحتاجه للعمل مع الذكاء الاصطناعي - في مكان واحد" 
+                : "Everything you need to work with AI - in one place"}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {TOOLS.map((tool, i) => {
               const Icon = tool.icon;
+              const isLarge = i === 0;
+              
               return (
                 <Link key={tool.href} href={tool.href}>
                   <motion.div
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={toolsInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: i * 0.08 }}
-                    className="group bg-white rounded-2xl p-6 border border-ivory-300 hover:border-book-cloth/40 transition-all hover:shadow-lg hover:-translate-y-0.5 corner-brackets grain-overlay card-depth"
+                    transition={{ delay: i * 0.08, duration: 0.5 }}
+                    className={`group bg-white rounded-2xl p-6 border border-ivory-300 hover:border-book-cloth/50 transition-all hover:shadow-xl hover:-translate-y-1 ${
+                      isLarge ? "lg:col-span-2 lg:row-span-2" : ""
+                    }`}
                   >
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${tool.gradient} text-white mb-4`}>
-                      <Icon className="h-5 w-5" />
+                    <div className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-book-cloth to-kraft text-white mb-4 ${
+                      isLarge ? "w-16 h-16" : "w-12 h-12"
+                    }`}>
+                      <Icon className={isLarge ? "h-8 w-8" : "h-5 w-5"} />
                     </div>
-                    <h3 className="text-base font-semibold text-slate-900 mb-1.5 group-hover:text-book-cloth transition-colors">
-                      {tool.name}
+                    <h3 className={`font-semibold text-slate-900 mb-2 group-hover:text-book-cloth transition-colors ${
+                      isLarge ? "text-xl" : "text-base"
+                    }`}>
+                      {lang === "ar" ? tool.nameAr : tool.nameEn}
                     </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{tool.desc}</p>
+                    <p className="text-sm text-slate-500 leading-relaxed">
+                      {lang === "ar" ? tool.descAr : tool.descEn}
+                    </p>
                   </motion.div>
                 </Link>
               );
             })}
           </div>
         </div>
-      </section>
+      </SlideSection>
 
-      {/* Wave Divider */}
-      <WaveDivider className="max-w-7xl mx-auto" />
-
-      {/* What is بصيرة? */}
-      <section className="py-20 bg-gradient-to-b from-white to-[#FAFAF7]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* SLIDE 4: Benefits - Large Cards */}
+      <SlideSection className="bg-slate-900 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-900" />
+        
+        <div className="relative max-w-5xl mx-auto w-full">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
+            initial={{ opacity: 0, y: 30 }}
+            animate={benefitsInView ? { opacity: 1, y: 0 } : {}}
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-              {lang === "ar" ? "ما هي بصيرة؟" : "What is Baseera?"}
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+              {lang === "ar" ? "لماذا بصيرة؟" : "Why Baseera?"}
             </h2>
-            <div className="w-20 h-1 bg-book-cloth mx-auto rounded-full"></div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-3xl border border-ivory-300 p-8 shadow-sm"
-          >
-            <p className="text-lg text-slate-700 leading-relaxed mb-6">
-              {lang === "ar" 
-                ? "بصيرة هي منصة عربية مجانية ١٠٠٪ تهدف إلى مساعدتك في الاستفادة من أدوات الذكاء الاصطناعي بكل سهولة واحترافية. سواء كنت تريد كتابة محتوى أفضل، أو تحسين سيرتك الذاتية، أو إنشاء صور وفيديوهات مذهلة باستخدام الذكاء الاصطناعي - بصيرة帮助你 doing ذلك مجاناً تماماً."
-                : "Baseera is a 100% free Arabic platform designed to help you leverage AI tools with ease and professionalism. Whether you want to write better content, improve your CV, or create stunning images and videos using AI - Baseera helps you do it all for free."}
+            <p className="text-lg text-slate-400 max-w-xl mx-auto">
+              {lang === "ar"
+                ? "منصة صُممت لخدمتك - مجاناً ودون أي تعقيدات"
+                : "A platform designed to serve you - free and without complications"}
             </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-              <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
-                <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <Infinity className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "مجاناً تماماً" : "Completely Free"}</h4>
-                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "لا يوجد أي تكاليف أو اشتراكات أو حدود" : "No costs, subscriptions, or limits"}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Globe className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "بالعربية" : "In Arabic"}</h4>
-                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "واجهة وأدوات بالكامل باللغة العربية" : "Interface and tools fully in Arabic"}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-xl border border-purple-100">
-                <div className="flex-shrink-0 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "يدعم جميع النماذج" : "Supports All Models"}</h4>
-                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "GPT, Claude, Gemini, Grok والمزيد" : "GPT, Claude, Gemini, Grok and more"}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
-                <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                  <Zap className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "سرعة في الاستخدام" : "Fast & Easy"}</h4>
-                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "ابدأ فوراً بدون تسجيل أو انتظار" : "Start instantly - no signup or waiting"}</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section ref={featuresRef} className="py-20 bg-white border-y border-ivory-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={featuresInView ? { opacity: 1, y: 0 } : {}}
-            className="text-center mb-14"
-          >
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-                {lang === "ar" ? "لماذا بصيرة؟" : "Why Baseera?"}
-              </h2>
-              <p className="text-slate-500">
-                {lang === "ar" ? "أفضل منصة شاملة لتحسين أوامر الذكاء الاصطناعي" : "The most comprehensive AI prompt enhancement platform"}
-              </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map((feature, i) => {
-              const Icon = feature.icon;
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {BENEFITS.map((benefit, i) => {
+              const Icon = benefit.icon;
+              
               return (
                 <motion.div
-                  key={feature.name}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={featuresInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: i * 0.1 }}
-                  className="text-center corner-brackets"
+                  key={benefit.titleEn}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={benefitsInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="group bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-book-cloth/50 transition-all hover:bg-slate-800"
                 >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-book-cloth/10 mx-auto mb-4">
-                    <Icon className="h-6 w-6 text-book-cloth" />
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-book-cloth to-kraft flex items-center justify-center">
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2 text-white">
+                        {lang === "ar" ? benefit.titleAr : benefit.titleEn}
+                      </h3>
+                      <p className="text-slate-400">
+                        {lang === "ar" ? benefit.descAr : benefit.descEn}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-2">{feature.name}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{feature.desc}</p>
                 </motion.div>
               );
             })}
           </div>
         </div>
-      </section>
+      </SlideSection>
 
-      {/* CTA */}
-      <section className="py-20">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-            {lang === "ar" ? "استعد لصياغة إبداعك" : "Ready to Craft Your Creativity?"}
-          </h2>
-          <p className="text-slate-500 mb-8">
-            {lang === "ar"
-              ? "ابدأ الآن في توليد أوامر احترافية بالذكاء الاصطناعي مجاناً"
-              : "Start generating professional AI commands for free"}
-          </p>
-          <Link href="/text">
-            <button className="bg-book-cloth text-white h-12 px-10 rounded-xl text-sm font-semibold flex items-center gap-2 mx-auto hover:bg-kraft transition-colors shadow-sm">
-              <Wand2 className="h-4 w-4" />
-              {t("hero.cta")}
-            </button>
-          </Link>
+      {/* SLIDE 5: Final CTA */}
+      <SlideSection className="bg-gradient-to-br from-book-cloth to-kraft text-white">
+        <div className="absolute inset-0 geo-pattern opacity-20" />
+        
+        <div className="relative text-center max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+          >
+            <h2 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight">
+              {lang === "ar" ? "ابدأ الآن - مجاناً" : "Start Now - It's Free"}
+            </h2>
+            <p className="text-xl text-white/80 mb-10 leading-relaxed">
+              {lang === "ar"
+                ? "لا حاجة للتسجيل أو الدفع. فقط أدخل فكرتك وابدأ في تحسين أوامرك للذكاء الاصطناعي فوراً."
+                : "No registration or payment needed. Just enter your idea and start improving your AI prompts instantly."}
+            </p>
+
+            <Link href="/text">
+              <button className="bg-white text-slate-900 h-16 px-12 rounded-2xl text-lg font-bold flex items-center gap-3 mx-auto hover:scale-105 transition-all shadow-2xl">
+                <Wand2 className="h-5 w-5" />
+                {lang === "ar" ? "ابدأ مجاناً الآن" : "Start Free Now"}
+              </button>
+            </Link>
+
+            <div className="flex items-center justify-center gap-6 mt-12 text-white/60 text-sm">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                <span>{lang === "ar" ? "بدون تكاليف" : "No Costs"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                <span>{lang === "ar" ? "بدون تسجيل" : "No Signup"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                <span>{lang === "ar" ? "بدون حدود" : "No Limits"}</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </SlideSection>
     </div>
   );
 }
