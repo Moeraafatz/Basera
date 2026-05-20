@@ -5,6 +5,18 @@ import { rateLimiter, createRateLimitResponse } from "@/lib/rate-limiter";
 import { parseJsonBody, validateBody, required, optional, isOneOf, isString } from "@/lib/validation";
 import { logger } from "@/lib/logger";
 
+function extractJsonFromText(text: string): unknown | null {
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 async function handler(req: NextRequest) {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
@@ -75,10 +87,24 @@ Do NOT wrap the JSON in markdown code blocks. Do NOT add any text before or afte
 
   let parsedResult: unknown;
   try {
-    const cleaned = result.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    let cleaned = result.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    
+    if (!cleaned.startsWith("{")) {
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleaned = jsonMatch[0];
+      }
+    }
+    
     parsedResult = JSON.parse(cleaned);
   } catch {
-    throw new ApiError(502, "AI response was not valid JSON. Please try again.");
+    const fallback = extractJsonFromText(result);
+    if (fallback) {
+      parsedResult = fallback;
+    } else {
+      logger.error("CV analysis JSON parse failed", { result: result.slice(0, 500) });
+      throw new ApiError(502, "AI response was not valid JSON. Please try again.");
+    }
   }
 
   const duration = Date.now() - startTime;
