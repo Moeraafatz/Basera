@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, Sparkles, Image, Video, Zap } from "lucide-react";
+import { FileText, Sparkles, Zap } from "lucide-react";
 import { useTranslate } from "@/lib/i18n";
 
 export default function DashboardPage() {
@@ -10,8 +10,6 @@ export default function DashboardPage() {
   const tools = [
     { href: "/text", label: t("nav.text"), icon: Sparkles, desc: t("tools.textDesc") },
     { href: "/cv", label: t("nav.cv"), icon: FileText, desc: t("tools.cvDesc") },
-    { href: "/image", label: t("nav.image"), icon: Image, desc: t("tools.imageDesc") },
-    { href: "/video", label: t("nav.video"), icon: Video, desc: t("tools.videoDesc") },
   ];
 
   return (
@@ -25,7 +23,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-8 max-w-2xl">
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (

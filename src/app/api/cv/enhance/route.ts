@@ -5,6 +5,18 @@ import { rateLimiter, createRateLimitResponse } from "@/lib/rate-limiter";
 import { parseJsonBody, validateBody, required, optional, isOneOf } from "@/lib/validation";
 import { logger } from "@/lib/logger";
 
+function extractJsonFromText(text: string): unknown | null {
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 async function handler(req: NextRequest) {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
@@ -82,11 +94,29 @@ Return enhanced CV sections in JSON format:
   });
 
   let parsedResult: unknown;
+  let parseError = null;
+  
+  const cleaned = result.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  
   try {
-    const cleaned = result.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
     parsedResult = JSON.parse(cleaned);
-  } catch {
-    throw new ApiError(502, "AI response was not valid JSON. Please try again.");
+  } catch (e) {
+    parseError = e;
+    const extracted = extractJsonFromText(result);
+    if (extracted) {
+      parsedResult = extracted;
+      parseError = null;
+    }
+  }
+
+  if (parseError || !parsedResult) {
+    logger.warn("CV enhance JSON parse failed - using fallback", { result: result.substring(0, 500) });
+    parsedResult = {
+      summary: cleaned.substring(0, 500),
+      experience: [],
+      suggestedKeywords: [],
+      atsRecommendations: ["Could not parse AI response - please try again"],
+    };
   }
 
   const duration = Date.now() - startTime;

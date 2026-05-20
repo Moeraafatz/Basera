@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Wand2, Sparkles, Image as ImageIcon, Video, FileText, BarChart3,
+  Wand2, Sparkles, FileText,
   Zap, ArrowLeft, Bot, Globe, Infinity, Check,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,9 +19,6 @@ const CATEGORIES = [
 const TOOLS = [
   { href: "/text", icon: Sparkles, nameAr: "محسّن الأوامر", nameEn: "Prompt Enhancer", descAr: "حوّل أفكارك إلى أوامر احترافية للذكاء الاصطناعي", descEn: "Transform your ideas into professional AI prompts" },
   { href: "/cv", icon: FileText, nameAr: "تحسين السيرة الذاتية", nameEn: "CV Optimizer", descAr: "حلل وحسّن سيرتك الذاتية لأي سوق عمل", descEn: "Analyze and optimize your CV for any job market" },
-  { href: "/image", icon: ImageIcon, nameAr: "أوامر الصور", nameEn: "Image Prompts", descAr: "أنشئ أوامر قوية لتوليد الصور بالذكاء الاصطناعي", descEn: "Create powerful prompts for AI image generation" },
-  { href: "/video", icon: Video, nameAr: "أوامر الفيديو", nameEn: "Video Prompts", descAr: "أوامر احترافية لتوليد الفيديو بالذكاء الاصطناعي", descEn: "Professional prompts for AI video generation" },
-  { href: "/analytics", icon: BarChart3, nameAr: "التحليلات", nameEn: "Analytics", descAr: "تتبع الاستخدام وقارن بين النماذج", descEn: "Track usage and compare models" },
 ];
 
 const BENEFITS = [
@@ -130,7 +127,7 @@ export default function HomePage() {
             {/* Stats */}
             <div className="flex flex-wrap gap-8 mt-12 justify-center lg:justify-start">
               <div className="text-center lg:text-right">
-                <p className="text-3xl font-bold text-slate-900">٥+</p>
+                <p className="text-3xl font-bold text-slate-900">٢</p>
                 <p className="text-sm text-slate-500">{lang === "ar" ? "أدوات متاحة" : "Tools Available"}</p>
               </div>
               <div className="text-center lg:text-right">
@@ -230,7 +227,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {TOOLS.map((tool) => {
               const Icon = tool.icon;
               return (
