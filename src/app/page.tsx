@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import {
   Wand2, Sparkles, Image as ImageIcon, Video, FileText, BarChart3,
-  CheckCircle, Zap, Loader2, ArrowLeft, Bot, Globe, Edit3, FileSearch,
+  CheckCircle, Zap, Loader2, ArrowLeft, Bot, Globe, Edit3, FileSearch, CreditCard, Infinity,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslate, useLang } from "@/lib/i18n";
@@ -30,10 +30,10 @@ const TOOLS_BASE = [
 ];
 
 const FEATURES_BASE = [
-  { icon: Bot, nameAr: "Multi-Model", nameEn: "Multi-Model", descAr: "Works with all major AI models - GPT, Claude, Gemini, and more", descEn: "Works with all major AI models - GPT, Claude, Gemini, and more" },
-  { icon: Globe, nameAr: "Every Field", nameEn: "Every Field", descAr: "Prompts for content, business, coding, creative, marketing, and more", descEn: "Prompts for content, business, coding, creative, marketing, and more" },
-  { icon: Edit3, nameAr: "Live Editing", nameEn: "Live Editing", descAr: "Edit and refine your prompts in real-time with AI assistance", descEn: "Edit and refine your prompts in real-time with AI assistance" },
-  { icon: FileSearch, nameAr: "CV Optimization", nameEn: "CV Optimization", descAr: "Analyze and improve your resume for any job market worldwide", descEn: "Analyze and improve your resume for any job market worldwide" },
+  { icon: Infinity, nameAr: "مجاناً تماماً", nameEn: "100% Free", descAr: "استخدم جميع الأدوات بدون أي تكاليف أو حدود - للأبد", descEn: "Use all tools with no costs or limits - forever" },
+  { icon: Bot, nameAr: "يدعم جميع النماذج", nameEn: "All AI Models", descAr: "يعمل مع جميع نماذج الذكاء الاصطناعي الكبرى", descEn: "Works with all major AI models" },
+  { icon: Globe, nameAr: "يدعم كل المجالات", nameEn: "All Fields", descAr: "أوامر للمحتوى والأعمال والبرمجة والإبداع والتسويق", descEn: "Prompts for content, business, coding, creative, marketing" },
+  { icon: FileSearch, nameAr: "تحسين السير الذاتية", nameEn: "CV Optimization", descAr: "حلل وحسّن سيرتك الذاتية لأي سوق عمل عالمي", descEn: "Analyze and improve your CV for any job market" },
 ];
 
 function generatePrompt(input: string, level: Level, category: string): string {
@@ -122,7 +122,12 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               className={`text-center ${lang === "ar" ? "lg:text-right" : "lg:text-left"}`}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ivory-200/60 text-slate-600 text-sm mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-green-700 text-sm mb-6 border border-green-200">
+                <Infinity className="h-4 w-4" />
+                <span className="font-semibold">{lang === "ar" ? "مجاناً ١٠٠٪ - بدون أي تكاليف" : "100% Free - No Costs"}</span>
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ivory-200/60 text-slate-600 text-sm mb-6">
                 <Zap className="h-3.5 w-3.5 text-book-cloth" />
                 <span>{lang === "ar" ? t("hero.models") : t("hero.models")}</span>
               </div>
@@ -272,6 +277,79 @@ export default function HomePage() {
 
       {/* Wave Divider */}
       <WaveDivider className="max-w-7xl mx-auto" />
+
+      {/* What is بصيرة? */}
+      <section className="py-20 bg-gradient-to-b from-white to-[#FAFAF7]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              {lang === "ar" ? "ما هي بصيرة؟" : "What is Baseera?"}
+            </h2>
+            <div className="w-20 h-1 bg-book-cloth mx-auto rounded-full"></div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-3xl border border-ivory-300 p-8 shadow-sm"
+          >
+            <p className="text-lg text-slate-700 leading-relaxed mb-6">
+              {lang === "ar" 
+                ? "بصيرة هي منصة عربية مجانية ١٠٠٪ تهدف إلى مساعدتك في الاستفادة من أدوات الذكاء الاصطناعي بكل سهولة واحترافية. سواء كنت تريد كتابة محتوى أفضل، أو تحسين سيرتك الذاتية، أو إنشاء صور وفيديوهات مذهلة باستخدام الذكاء الاصطناعي - بصيرة帮助你 doing ذلك مجاناً تماماً."
+                : "Baseera is a 100% free Arabic platform designed to help you leverage AI tools with ease and professionalism. Whether you want to write better content, improve your CV, or create stunning images and videos using AI - Baseera helps you do it all for free."}
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+              <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
+                <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <Infinity className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "مجاناً تماماً" : "Completely Free"}</h4>
+                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "لا يوجد أي تكاليف أو اشتراكات أو حدود" : "No costs, subscriptions, or limits"}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Globe className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "بالعربية" : "In Arabic"}</h4>
+                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "واجهة وأدوات بالكامل باللغة العربية" : "Interface and tools fully in Arabic"}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                <div className="flex-shrink-0 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "يدعم جميع النماذج" : "Supports All Models"}</h4>
+                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "GPT, Claude, Gemini, Grok والمزيد" : "GPT, Claude, Gemini, Grok and more"}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">{lang === "ar" ? "سرعة في الاستخدام" : "Fast & Easy"}</h4>
+                  <p className="text-xs text-slate-600 mt-1">{lang === "ar" ? "ابدأ فوراً بدون تسجيل أو انتظار" : "Start instantly - no signup or waiting"}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Features */}
       <section ref={featuresRef} className="py-20 bg-white border-y border-ivory-300">
